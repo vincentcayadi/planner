@@ -92,7 +92,7 @@ export default function ExamScheduler() {
     { name: "pink", bg: "bg-pink-200", text: "text-pink-800" },
     { name: "orange", bg: "bg-orange-200", text: "text-orange-800" },
     { name: "cyan", bg: "bg-cyan-200", text: "text-cyan-800" },
-    { name: "gray", bg: "bg-gray-200", text: "text-gray-800" },
+    { name: "neutral", bg: "bg-neutral-200", text: "text-neutral-800" },
   ];
 
   // ---------- helpers ----------
@@ -615,11 +615,11 @@ export default function ExamScheduler() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
-        <div className="w-80 bg-white shadow-lg p-6 overflow-y-auto">
-          <Card className="mb-6">
+        <div className="w-80 bg-white shadow-lg p-6 overflow-y-auto flex flex-col gap-4">
+          <Card className="gap-0">
             <CardContent className="p-4">
               <div className="text-center">
-                <h2 className="text-xl font-bold text-gray-700">
+                <h2 className="text-xl font-bold text-neutral-700">
                   {dateString}
                 </h2>
                 <div className="flex items-center justify-between mt-3">
@@ -637,33 +637,33 @@ export default function ExamScheduler() {
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card className="gap-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Start & End</CardTitle>
+              <CardTitle className="text-sm">Planner Settings</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-2 gap-2">
                 <div>
+                  <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="text-sm pr-3 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
                   />
-                  <label className="text-xs text-gray-500">Start</label>
                 </div>
                 <div>
+                  <label className="text-xs text-neutral-500">End</label>
                   <Input
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="text-sm pr-3 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
                   />
-                  <label className="text-xs text-gray-500">End</label>
                 </div>
               </div>
               <div className="mt-2">
-                <label className="text-xs text-gray-500">
+                <label className="text-xs text-neutral-500">
                   Interval (minutes)
                 </label>
                 <Select
@@ -682,7 +682,7 @@ export default function ExamScheduler() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-4">
                 <Button
                   variant="secondary"
                   className="flex-1"
@@ -705,15 +705,12 @@ export default function ExamScheduler() {
                 className="hidden"
                 onChange={onFilePicked}
               />
-              <p className="mt-2 text-xs text-gray-500">
-                Recommended as backup
-              </p>
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card className="gap-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Add Task / Paper</CardTitle>
+              <CardTitle className="text-sm">Add Task </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 space-y-3">
               <div>
@@ -736,7 +733,7 @@ export default function ExamScheduler() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-gray-500">Start</label>
+                  <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
                     value={taskStartTime}
@@ -745,7 +742,7 @@ export default function ExamScheduler() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Duration</label>
+                  <label className="text-xs text-neutral-500">Duration</label>
                   <Select
                     value={String(taskDuration)}
                     onValueChange={(v) => setTaskDuration(v)}
@@ -764,7 +761,7 @@ export default function ExamScheduler() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Description</label>
+                <label className="text-xs text-neutral-500">Description</label>
                 <Textarea
                   value={taskDesc}
                   onChange={(e) => setTaskDesc(e.target.value)}
@@ -774,7 +771,7 @@ export default function ExamScheduler() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-2 block">
+                <label className="text-xs text-neutral-500 mb-2 block">
                   Palette
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -785,7 +782,7 @@ export default function ExamScheduler() {
                       onClick={() => setSelectedColor(c.name)}
                       className={`h-8 rounded-lg ${c.bg} ${
                         selectedColor === c.name
-                          ? "ring-2 ring-offset-2 ring-slate-400"
+                          ? "ring-2 ring-offset-2 ring-neutral-400"
                           : ""
                       } cursor-pointer`}
                       aria-label={c.name}
@@ -801,7 +798,7 @@ export default function ExamScheduler() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="gap-0">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Current Items</CardTitle>
             </CardHeader>
@@ -817,9 +814,9 @@ export default function ExamScheduler() {
                       <div className={`font-medium ${c?.text} text-sm`}>
                         {task.name}
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-neutral-600">
                         {task.description ? (
-                          <div className="text-slate-700 mb-0.5 whitespace-pre-wrap">
+                          <div className="text-neutral-700 mb-0.5 whitespace-pre-wrap">
                             {task.description}
                           </div>
                         ) : null}
@@ -831,7 +828,7 @@ export default function ExamScheduler() {
                         onClick={() => openEdit(task)}
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-slate-700 hover:bg-slate-100"
+                        className="h-6 w-6 p-0 text-neutral-700 hover:bg-neutral-100"
                       >
                         <Pencil className="w-3 h-3" />
                       </Button>
@@ -848,7 +845,7 @@ export default function ExamScheduler() {
                 );
               })}
               {currentSchedule.length === 0 && (
-                <div className="text-sm text-gray-500 text-center py-4">
+                <div className="text-sm text-neutral-500 text-center py-4">
                   No tasks scheduled
                 </div>
               )}
@@ -877,9 +874,9 @@ export default function ExamScheduler() {
         </div>
 
         <div className="flex-1 p-6 overflow-hidden">
-          <Card className="h-full flex flex-col bg-slate-200/70">
+          <Card className="shadow-lg max-w-7xl mx-auto h-full flex flex-col bg-neutral-200/70">
             <CardHeader className="flex-shrink-0">
-              <div className="grid grid-cols-[1fr_auto] items-end text-slate-600 tracking-tighter">
+              <div className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter">
                 <div className="pl-4 pt-2">
                   <div className="text-5xl font-bold leading-none">
                     {currentDate.getDate()}
@@ -901,12 +898,12 @@ export default function ExamScheduler() {
                     return (
                       <div
                         key={`${to12h(slot.time)}-${idx}`}
-                        className="grid grid-cols-12 border-b border-gray-200"
+                        className="grid grid-cols-12 border-b border-neutral-200"
                       >
-                        <div className="col-span-2 bg-orange-100 p-4 border-r border-gray-200 text-sm font-medium text-gray-700 flex items-center">
+                        <div className="col-span-2 bg-orange-100 p-4 border-r border-neutral-200 text-base font-semibold tracking-tighter text-neutral-700 flex items-center">
                           {to12h(slot.time)}
                         </div>
-                        <div className="col-span-10 bg-gray-50 p-4 text-sm text-gray-400 flex items-center">
+                        <div className="col-span-10 bg-neutral-50 p-4 text-sm text-neutral-400 flex items-center">
                           <span className="opacity-50">Available</span>
                         </div>
                       </div>
@@ -916,9 +913,9 @@ export default function ExamScheduler() {
                   return (
                     <div
                       key={`${slot.task.id}-${idx}`}
-                      className="grid grid-cols-12 border-b border-gray-200"
+                      className="grid grid-cols-12 border-b border-neutral-200"
                     >
-                      <div className="col-span-2 bg-orange-100 p-4 border-r border-gray-200 text-sm font-medium text-gray-700 flex items-start">
+                      <div className="col-span-2 bg-orange-100 p-4 border-r border-neutral-200 text-base font-semibold tracking-tighter text-neutral-700 flex items-start">
                         {to12h(slot.time)}
                       </div>
                       <div
@@ -935,11 +932,11 @@ export default function ExamScheduler() {
                             {slot.task.name}
                           </div>
                           {slot.task.description ? (
-                            <div className="text-sm text-slate-700 mb-1 whitespace-pre-wrap">
+                            <div className="text-sm text-neutral-700 mb-1 whitespace-pre-wrap">
                               {slot.task.description}
                             </div>
                           ) : null}
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-neutral-600">
                             {to12h(slot.task.startTime)} -{" "}
                             {to12h(slot.task.endTime)}
                           </div>
@@ -1010,7 +1007,7 @@ export default function ExamScheduler() {
               />
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-gray-500">Start</label>
+                  <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
                     value={editItem.startTime}
@@ -1036,7 +1033,7 @@ export default function ExamScheduler() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Duration</label>
+                  <label className="text-xs text-neutral-500">Duration</label>
                   <Select
                     value={String(editItem.duration)}
                     onValueChange={(v) => {
@@ -1069,7 +1066,7 @@ export default function ExamScheduler() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Description</label>
+                <label className="text-xs text-neutral-500">Description</label>
                 <Textarea
                   value={editItem.description ?? ""}
                   onChange={(e) =>
@@ -1081,7 +1078,7 @@ export default function ExamScheduler() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-2 block">
+                <label className="text-xs text-neutral-500 mb-2 block">
                   Palette
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -1094,7 +1091,7 @@ export default function ExamScheduler() {
                       }
                       className={`h-8 rounded-lg ${c.bg} ${
                         editItem.color === c.name
-                          ? "ring-2 ring-offset-2 ring-slate-400"
+                          ? "ring-2 ring-offset-2 ring-neutral-400"
                           : ""
                       } cursor-pointer`}
                       aria-label={c.name}
