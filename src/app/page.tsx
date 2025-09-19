@@ -120,35 +120,44 @@ export default function ExamScheduler() {
     typeof window !== "undefined" &&
     "showSaveFilePicker" in window &&
     "showOpenFilePicker" in window;
-  const formatDateKey = (d) => {
+
+  const formatDateKey = (d: Date): string => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   };
-  const timeToMinutes = (t) => {
+
+  const timeToMinutes = (t: string): number => {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   };
-  const minutesToTime = (mins) => {
+
+  const minutesToTime = (mins: number): string => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   };
+
   // display helper: 24h -> 12h with AM/PM
-  const to12h = (t) => {
+  const to12h = (t: string): string => {
     if (!t) return "";
     const [H, M] = t.split(":").map(Number);
     const ampm = H >= 12 ? "PM" : "AM";
     const h12 = H % 12 || 12;
     return `${h12}:${String(M).padStart(2, "0")} ${ampm}`;
   };
-  const overlaps = (aStart, aEnd, bStart, bEnd) =>
-    aStart < bEnd && bStart < aEnd;
+
+  const overlaps = (
+    aStart: number,
+    aEnd: number,
+    bStart: number,
+    bEnd: number
+  ): boolean => aStart < bEnd && bStart < aEnd;
 
   // Generate time slots based on current start/end/interval
-  const timeSlots = useMemo(() => {
-    const out = [];
+  const timeSlots = useMemo<string[]>(() => {
+    const out: string[] = [];
     const safeInterval = Math.max(
       5,
       Number.isFinite(interval) ? Number(interval) : 30
@@ -262,7 +271,7 @@ export default function ExamScheduler() {
     toast.success("Task overridden successfully");
   };
 
-  const removeTask = (id) => {
+  const removeTask = (id: number) => {
     const dateKey = formatDateKey(currentDate);
     const filtered = getCurrentSchedule().filter((t) => t.id !== id);
     setSchedules({ ...schedules, [dateKey]: filtered });
@@ -1043,12 +1052,15 @@ export default function ExamScheduler() {
               <div>
                 <label className="text-xs text-gray-500">Description</label>
                 <Textarea
-                  value={editItem.description || ""}
+                  value={editItem?.description ?? ""}
                   onChange={(e) =>
-                    setEditItem({ ...editItem, description: e.target.value })
+                    setEditItem((prev) =>
+                      prev ? { ...prev, description: e.target.value } : prev
+                    )
                   }
-                  rows={3}
+                  placeholder="Optional notes for this item"
                   className="mt-1"
+                  rows={3}
                 />
               </div>
               <div>
