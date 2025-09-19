@@ -116,10 +116,16 @@ export default function ExamScheduler() {
   }
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const supportsFS =
-    typeof window !== "undefined" &&
-    "showSaveFilePicker" in window &&
-    "showOpenFilePicker" in window;
+  type FSWin = Window &
+    typeof globalThis & {
+      showSaveFilePicker?: (opts?: any) => Promise<any>;
+      showOpenFilePicker?: (opts?: any) => Promise<any>;
+    };
+
+  const w: FSWin | undefined =
+    typeof window !== "undefined" ? (window as FSWin) : undefined;
+
+  const supportsFS = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
   const formatDateKey = (d: Date): string => {
     const y = d.getFullYear();
@@ -354,7 +360,7 @@ export default function ExamScheduler() {
   const saveEdit = () => {
     if (!editItem) return;
 
-    // validate against day start
+    // 1) Start must be within the day's window
     if (timeToMinutes(editItem.startTime) < timeToMinutes(startTime)) {
       toast.error("Invalid start time", {
         description: `Start time (${to12h(
@@ -365,10 +371,23 @@ export default function ExamScheduler() {
     }
 
     const others = getCurrentSchedule().filter((t) => t.id !== editItem.id);
+
+    // Work in minutes for math, clamp to day end
     const startBound = timeToMinutes(editItem.startTime);
     const endBound = timeToMinutes(endTime);
-    const safeDuration = Math.max(5, Number(editItem.duration || 0));
+    const rawDuration = Number(editItem.duration || 0);
+    const safeDuration = Math.max(5, rawDuration); // at least 5 minutes
     const endComputed = Math.min(startBound + safeDuration, endBound);
+
+    // 2) Block zero/negative duration after clamping
+    if (endComputed <= startBound) {
+      toast.error("Invalid duration", {
+        description:
+          "The resulting duration is zero or negative. Adjust the start time or duration.",
+      });
+      return;
+    }
+
     const normalized = {
       ...editItem,
       startTime: minutesToTime(startBound),
@@ -376,7 +395,7 @@ export default function ExamScheduler() {
       duration: endComputed - startBound,
     };
 
-    // conflicts vs others
+    // 3) Conflict check against the rest of the items
     const hits = others.filter((t) =>
       overlaps(
         startBound,
@@ -396,9 +415,10 @@ export default function ExamScheduler() {
     const updated = [...others, normalized].sort(
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
+
     setSchedules({ ...schedules, [dateKey]: updated });
     setEditOpen(false);
-    toast.success("Saved changes");
+    toast.success("Saved changes", { description: "Item updated." });
   };
 
   // Build display rows with proper span
@@ -472,8 +492,8 @@ export default function ExamScheduler() {
   const saveJSON = async () => {
     const json = JSON.stringify(serialize(), null, 2);
     try {
-      if (supportsFS) {
-        const handle = await window.showSaveFilePicker({
+      if (supportsFS && w?.showSaveFilePicker) {
+        const handle = await w.showSaveFilePicker({
           suggestedName: `planner-${formatDateKey(currentDate)}.json`,
           types: [
             {
@@ -482,15 +502,14 @@ export default function ExamScheduler() {
             },
           ],
         });
-        const writable = await handle.createWritable();
+        const writable = await (handle as any).createWritable();
         await writable.write(new Blob([json], { type: "application/json" }));
         await writable.close();
         return;
       }
     } catch (e) {
-      /* fall through to download */
+      // fall through to download
     }
-    // fallback: download
     const blob = new Blob([json], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -501,8 +520,8 @@ export default function ExamScheduler() {
 
   const openJSON = async () => {
     try {
-      if (supportsFS) {
-        const [handle] = await window.showOpenFilePicker({
+      if (supportsFS && w?.showOpenFilePicker) {
+        const [handle] = await w.showOpenFilePicker({
           multiple: false,
           types: [
             {
@@ -511,16 +530,16 @@ export default function ExamScheduler() {
             },
           ],
         });
-        const file = await handle.getFile();
+        const file = await (handle as any).getFile();
         const text = await file.text();
         const data = JSON.parse(text);
         loadFromData(data);
         return;
       }
     } catch (e) {
-      /* fall back to input */
+      // fall back to <input type="file">
     }
-    if (fileInputRef.current) fileInputRef.current.click();
+    fileInputRef.current?.click();
   };
 
   const onFilePicked = async (ev) => {
