@@ -1071,11 +1071,9 @@ export default function ExamScheduler() {
               <div>
                 <label className="text-xs text-gray-500">Description</label>
                 <Textarea
-                  value={editItem?.description ?? ""}
+                  value={editItem.description ?? ""}
                   onChange={(e) =>
-                    setEditItem((prev) =>
-                      prev ? { ...prev, description: e.target.value } : prev
-                    )
+                    setEditItem({ ...editItem, description: e.target.value })
                   }
                   placeholder="Optional notes for this item"
                   className="mt-1"
