@@ -34,6 +34,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Dexie from "dexie";
 
+type Task = {
+  id: number;
+  name: string;
+  description?: string;
+  startTime: string; // "HH:MM"
+  endTime: string; // "HH:MM"
+  duration: number; // minutes
+  color: string;
+};
+
 const db = new Dexie("plannerDB");
 db.version(1).stores({ days: "dateKey", meta: "key" });
 const days = () => db.table("days");
@@ -41,7 +51,7 @@ const meta = () => db.table("meta");
 
 export default function ExamScheduler() {
   // ---------- state ----------
-  const [schedules, setSchedules] = useState({});
+  const [schedules, setSchedules] = useState<Record<string, Task[]>>({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("23:30");
@@ -56,20 +66,24 @@ export default function ExamScheduler() {
   const [nameError, setNameError] = useState(false);
 
   // Conflict dialog state
-  const [conflicts, setConflicts] = useState([]);
-  const [pendingTask, setPendingTask] = useState(null);
+  const [conflicts, setConflicts] = useState<Task[]>([]);
+  const [pendingTask, setPendingTask] = useState<{
+    task: Task;
+    dateKey: string;
+  } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Clear-all dialog state
   const [clearOpen, setClearOpen] = useState(false);
   // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
-  const [editItem, setEditItem] = useState(null);
+  const [editItem, setEditItem] = useState<Task | null>(null);
 
   // edit-conflict dialog state
-  const [editConflicts, setEditConflicts] = useState([]);
-  const [editPending, setEditPending] = useState(null);
+  const [editConflicts, setEditConflicts] = useState<Task[]>([]);
+  const [editPending, setEditPending] = useState<Task | null>(null);
   const [editConflictOpen, setEditConflictOpen] = useState(false);
+
   const colors = [
     { name: "blue", bg: "bg-blue-200", text: "text-blue-800" },
     { name: "green", bg: "bg-green-200", text: "text-green-800" },
@@ -83,20 +97,25 @@ export default function ExamScheduler() {
 
   // ---------- helpers ----------
   // tiny debounce util so we don't write on every keystroke
-  const useDebouncedCallback = (fn, delay) => {
-    const fnRef = React.useRef(fn);
+  function useDebouncedCallback<T extends (...args: any[]) => void>(
+    fn: T,
+    delay: number
+  ) {
+    const fnRef = React.useRef<T>(fn);
     React.useEffect(() => {
       fnRef.current = fn;
     }, [fn]);
+
     return React.useMemo(() => {
-      let t;
-      return (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => fnRef.current?.(...args), delay);
+      let t: ReturnType<typeof setTimeout> | null = null;
+      return (...args: Parameters<T>) => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => fnRef.current(...args), delay);
       };
     }, [delay]);
-  };
-  const fileInputRef = React.useRef(null);
+  }
+
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const supportsFS =
     typeof window !== "undefined" &&
     "showSaveFilePicker" in window &&
