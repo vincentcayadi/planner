@@ -5,6 +5,7 @@ import { Trash2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -52,7 +53,9 @@ const meta = () => db.table("meta");
 export default function ExamScheduler() {
   // ---------- state ----------
   const [schedules, setSchedules] = useState<Record<string, Task[]>>({});
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = React.useState<Date | undefined>(
+    new Date()
+  );
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("23:30");
   const [interval, setInterval] = useState(30); // minutes
@@ -616,30 +619,20 @@ export default function ExamScheduler() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
         <div className="w-80 bg-white shadow-lg p-6 overflow-y-auto flex flex-col gap-4">
-          <Card className="gap-0">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <h2 className="text-xl font-bold text-neutral-700">
-                  {dateString}
-                </h2>
-                <div className="flex items-center justify-between mt-3">
-                  <Button onClick={goToPreviousDay} variant="outline" size="sm">
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button onClick={goToToday} variant="outline" size="sm">
-                    Today
-                  </Button>
-                  <Button onClick={goToNextDay} variant="outline" size="sm">
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+          <Card className="gap-0 py-3">
+            <CardContent className="pt-0 flex justify-center">
+              <Calendar
+                mode="single"
+                selected={currentDate}
+                onSelect={(d) => d && setCurrentDate(d)}
+                weekStartsOn={1}
+              />
             </CardContent>
           </Card>
 
           <Card className="gap-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Planner Settings</CardTitle>
+              <CardTitle className="text-sm">Settings</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-2 gap-2">
