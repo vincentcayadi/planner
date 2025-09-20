@@ -898,12 +898,16 @@ export default function ExamScheduler() {
                     return (
                       <div
                         key={`${to12h(slot.time)}-${idx}`}
-                        className="grid grid-cols-12 border-b border-neutral-200"
+                        className="grid [grid-template-columns:80px_1fr] md:[grid-template-columns:96px_1fr] border-b border-neutral-200"
                       >
-                        <div className="col-span-2 bg-orange-100 p-4 border-r border-neutral-200 text-base font-semibold tracking-tighter text-neutral-700 flex items-center">
+                        <div
+                          className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200
+                  text-xs md:text-sm font-semibold tracking-tighter text-neutral-700
+                  flex items-center whitespace-nowrap tabular-nums"
+                        >
                           {to12h(slot.time)}
                         </div>
-                        <div className="col-span-10 bg-neutral-50 p-4 text-sm text-neutral-400 flex items-center">
+                        <div className="bg-neutral-50 px-3 md:px-4 py-3 md:py-4 text-sm text-neutral-400 flex items-center">
                           <span className="opacity-50">Available</span>
                         </div>
                       </div>
@@ -913,13 +917,17 @@ export default function ExamScheduler() {
                   return (
                     <div
                       key={`${slot.task.id}-${idx}`}
-                      className="grid grid-cols-12 border-b border-neutral-200"
+                      className="grid [grid-template-columns:80px_1fr] md:[grid-template-columns:96px_1fr] border-b border-neutral-200"
                     >
-                      <div className="col-span-2 bg-orange-100 p-4 border-r border-neutral-200 text-base font-semibold tracking-tighter text-neutral-700 flex items-start">
+                      <div
+                        className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200
+                  text-xs md:text-sm font-semibold tracking-tighter text-neutral-700
+                  flex items-start whitespace-nowrap tabular-nums"
+                      >
                         {to12h(slot.time)}
                       </div>
                       <div
-                        className={`col-span-10 ${c?.bg} p-6 flex items-center justify-center text-center`}
+                        className={`p-4 md:p-6 ${c?.bg} flex items-center justify-center text-center`}
                         style={{
                           minHeight: `${slot.rowSpan * 60}px`,
                           height: `${slot.rowSpan * 60}px`,
@@ -927,17 +935,17 @@ export default function ExamScheduler() {
                       >
                         <div>
                           <div
-                            className={`font-semibold ${c?.text} text-xl mb-2`}
+                            className={`font-semibold ${c?.text} text-lg md:text-xl mb-1 md:mb-2`}
                           >
                             {slot.task.name}
                           </div>
                           {slot.task.description ? (
-                            <div className="text-sm text-neutral-700 mb-1 whitespace-pre-wrap">
+                            <div className="text-xs md:text-sm text-neutral-700 mb-1 whitespace-pre-wrap">
                               {slot.task.description}
                             </div>
                           ) : null}
-                          <div className="text-sm text-neutral-600">
-                            {to12h(slot.task.startTime)} -{" "}
+                          <div className="text-xs md:text-sm text-neutral-600">
+                            {to12h(slot.task.startTime)} –{" "}
                             {to12h(slot.task.endTime)}
                           </div>
                         </div>
