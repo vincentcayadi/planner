@@ -1,17 +1,20 @@
-// src/app/api/share/[id]/route.ts
 import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 
-type Context = { params: { id: string } };
+export const runtime = "edge"; // Upstash works great on Edge
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export async function GET(_req: Request, { params }: Context) {
-  const { id } = params;
-  const key = `share:day:${id}`;
+type Ctx = { params: Promise<{ id: string }> };
 
-  const data = await kv.get(key);
-  if (!data) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+export async function GET(_req: Request, { params }: Ctx) {
+  const { id } = await params; // await the params
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  return NextResponse.json(data);
+  const data = await kv.get(`share:day:${id}`);
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  return NextResponse.json(data, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
