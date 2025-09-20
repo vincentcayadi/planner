@@ -874,7 +874,7 @@ export default function ExamScheduler() {
         </div>
 
         <div className="flex-1 p-6 overflow-hidden">
-          <Card className="shadow-lg max-w-7xl mx-auto h-full flex flex-col bg-neutral-200/70">
+          <Card className="shadow-lg max-w-3xl mx-auto h-full flex flex-col bg-neutral-200/70 py-0 pt-6 overflow-clip">
             <CardHeader className="flex-shrink-0">
               <div className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter">
                 <div className="pl-4 pt-2">
