@@ -640,7 +640,7 @@ export default function ExamScheduler() {
   }, [startTime, endTime, interval]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
       <div className="flex h-screen">
         <div className="w-80 bg-white shadow-lg p-6 overflow-y-auto flex flex-col gap-4">
           <Card className="gap-0 py-3">
