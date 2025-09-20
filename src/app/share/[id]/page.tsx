@@ -140,18 +140,7 @@ export default async function SharePage({
           </div>
         </header>
 
-        <div className="shadow-lg rounded-2xl overflow-hidden bg-white/70 backdrop-blur pb-6">
-          <div className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter">
-            <div className="pl-4 pt-2 text-5xl font-bold leading-none">
-              {date.getDate()}
-            </div>
-            <div className="pr-4 pb-1 self-end text-3xl font-semibold leading-none">
-              {date
-                .toLocaleDateString(undefined, { weekday: "short" })
-                .toUpperCase()}
-            </div>
-          </div>
-
+        <div className="shadow-lg rounded-2xl overflow-hidden bg-white/70 backdrop-blur">
           <div className="divide-y divide-neutral-200">
             {rows.map((row, i) =>
               !row.task ? (
