@@ -200,6 +200,38 @@ export default function ExamScheduler() {
 
   const getCurrentSchedule = () => schedules[formatDateKey(currentDate)] || [];
 
+  type SnapMode = "nearest" | "floor" | "ceil";
+
+  const clamp = (n: number, lo: number, hi: number) =>
+    Math.max(lo, Math.min(hi, n));
+
+  /** Snap minutes to a step *anchored* at `anchorMin` (your day start). */
+  const snapToAnchor = (
+    mins: number,
+    step: number,
+    anchorMin: number,
+    mode: SnapMode = "nearest"
+  ) => {
+    const rel = (mins - anchorMin) / step;
+    const q =
+      mode === "floor"
+        ? Math.floor(rel)
+        : mode === "ceil"
+        ? Math.ceil(rel)
+        : Math.round(rel);
+    return anchorMin + q * step;
+  };
+
+  const announceSnap = (label: string, fromMin: number, toMin: number) => {
+    if (fromMin !== toMin) {
+      toast(label, {
+        description: `${to12h(minutesToTime(fromMin))} → ${to12h(
+          minutesToTime(toMin)
+        )}`,
+      });
+    }
+  };
+
   // ---------- CRUD ----------
   const addTask = () => {
     const trimmed = taskName.trim();
@@ -212,8 +244,12 @@ export default function ExamScheduler() {
     }
     setNameError(false);
 
-    // validate start is not before the day's start
-    if (timeToMinutes(taskStartTime) < timeToMinutes(startTime)) {
+    const anchor = timeToMinutes(startTime); // day start = grid anchor
+    const endLimit = timeToMinutes(endTime);
+    const rawStart = timeToMinutes(taskStartTime);
+
+    // must not be before the day's start (free-form day, but tasks can't precede it)
+    if (rawStart < anchor) {
       toast.error("Invalid start time", {
         description: `Start time (${to12h(
           taskStartTime
@@ -222,23 +258,39 @@ export default function ExamScheduler() {
       return;
     }
 
+    // snap ONLY the task start to the anchored grid (nearest by default)
+    const snappedStart = clamp(
+      snapToAnchor(rawStart, interval, anchor, "nearest"),
+      anchor,
+      endLimit
+    );
+    announceSnap("Task start adjusted", rawStart, snappedStart);
+
+    const startM = snappedStart;
+    const durMin = parseInt(taskDuration, 10) || 0;
+    const endM = Math.min(startM + durMin, endLimit);
+
+    if (endM <= startM) {
+      toast.error("Invalid duration", {
+        description: "The task would end before (or at) it starts.",
+      });
+      return;
+    }
+
     const dateKey = formatDateKey(currentDate);
     const current = [...getCurrentSchedule()];
-    const startM = timeToMinutes(taskStartTime);
-    const endLimit = timeToMinutes(endTime);
-    const endM = Math.min(startM + parseInt(taskDuration), endLimit);
 
     const newTask = {
       id: Date.now(),
       name: trimmed,
-      description: taskDesc.trim() || "", // NEW
+      description: taskDesc.trim() || "",
       startTime: minutesToTime(startM),
       endTime: minutesToTime(endM),
       duration: endM - startM,
       color: selectedColor,
     };
 
-    // conflict detection (unchanged)
+    // conflict detection
     const hits = current.filter((t) =>
       overlaps(
         startM,
@@ -760,7 +812,24 @@ export default function ExamScheduler() {
                     type="time"
                     value={taskStartTime}
                     onChange={(e) => setTaskStartTime(e.target.value)}
-                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    onBlur={(e) => {
+                      const anchor = timeToMinutes(startTime); // day start = grid anchor
+                      const endLimit = timeToMinutes(endTime);
+                      const raw = timeToMinutes(e.target.value);
+
+                      // snap to nearest grid tick derived from (anchor, interval), then clamp to day bounds
+                      const snapped = clamp(
+                        snapToAnchor(raw, interval, anchor, "nearest"),
+                        anchor,
+                        endLimit
+                      );
+
+                      if (snapped !== raw) {
+                        announceSnap("Task start adjusted", raw, snapped);
+                        setTaskStartTime(minutesToTime(snapped));
+                      }
+                    }}
+                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
                   />
                 </div>
                 <div>
@@ -1040,8 +1109,10 @@ export default function ExamScheduler() {
                   <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
+                    step={interval * 60} // help iOS pick in your interval
                     value={editItem.startTime}
                     onChange={(e) => {
+                      // live update (no snap yet) so UI feels responsive while typing
                       const val = e.target.value;
                       const startM = Math.max(
                         timeToMinutes(startTime),
@@ -1059,7 +1130,33 @@ export default function ExamScheduler() {
                         duration: endM - startM,
                       });
                     }}
-                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    onBlur={(e) => {
+                      // SNAP on blur: anchored to day start, clamped to day bounds
+                      const anchor = timeToMinutes(startTime);
+                      const endLimit = timeToMinutes(endTime);
+                      const raw = timeToMinutes(e.target.value);
+                      const snapped = clamp(
+                        snapToAnchor(raw, interval, anchor, "nearest"),
+                        anchor,
+                        endLimit
+                      );
+
+                      if (snapped !== raw) {
+                        announceSnap("Start adjusted", raw, snapped); // Sonner toast
+                      }
+
+                      const endM = Math.min(
+                        snapped + Number(editItem.duration || 0),
+                        endLimit
+                      );
+                      setEditItem({
+                        ...editItem,
+                        startTime: minutesToTime(snapped),
+                        endTime: minutesToTime(endM),
+                        duration: endM - snapped,
+                      });
+                    }}
+                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
                   />
                 </div>
                 <div>
