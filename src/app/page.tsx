@@ -813,11 +813,31 @@ export default function ExamScheduler() {
                     value={taskStartTime}
                     onChange={(e) => setTaskStartTime(e.target.value)}
                     onBlur={(e) => {
-                      const anchor = timeToMinutes(startTime); // day start = grid anchor
+                      const anchor = timeToMinutes(startTime); // day start (grid anchor)
                       const endLimit = timeToMinutes(endTime);
                       const raw = timeToMinutes(e.target.value);
 
-                      // snap to nearest grid tick derived from (anchor, interval), then clamp to day bounds
+                      // If before day start: show error, then auto-correct to the nearest valid tick (≥ day start).
+                      if (raw < anchor) {
+                        const snapped = clamp(
+                          snapToAnchor(raw, interval, anchor, "nearest"),
+                          anchor,
+                          endLimit
+                        );
+                        toast.error("Invalid start time", {
+                          description: `Start time (${to12h(
+                            e.target.value
+                          )}) is before your day start (${to12h(
+                            startTime
+                          )}). Auto-corrected to ${to12h(
+                            minutesToTime(snapped)
+                          )}.`,
+                        });
+                        setTaskStartTime(minutesToTime(snapped));
+                        return;
+                      }
+
+                      // Otherwise snap normally within the day's bounds.
                       const snapped = clamp(
                         snapToAnchor(raw, interval, anchor, "nearest"),
                         anchor,
@@ -1109,42 +1129,58 @@ export default function ExamScheduler() {
                   <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
-                    step={interval * 60} // help iOS pick in your interval
+                    step={interval * 60} // helps iOS pickers; doesn't change your logic
                     value={editItem.startTime}
                     onChange={(e) => {
-                      // live update (no snap yet) so UI feels responsive while typing
-                      const val = e.target.value;
-                      const startM = Math.max(
-                        timeToMinutes(startTime),
-                        timeToMinutes(val)
-                      );
+                      // live update: DO NOT clamp to day start here (lets the user type freely)
+                      const s = timeToMinutes(e.target.value);
                       const endLimit = timeToMinutes(endTime);
                       const endM = Math.min(
-                        startM + Number(editItem.duration || 0),
+                        s + Number(editItem.duration || 0),
                         endLimit
                       );
                       setEditItem({
                         ...editItem,
-                        startTime: minutesToTime(startM),
+                        startTime: minutesToTime(s),
                         endTime: minutesToTime(endM),
-                        duration: endM - startM,
+                        duration: endM - s,
                       });
                     }}
                     onBlur={(e) => {
-                      // SNAP on blur: anchored to day start, clamped to day bounds
-                      const anchor = timeToMinutes(startTime);
+                      const anchor = timeToMinutes(startTime); // day start
                       const endLimit = timeToMinutes(endTime);
                       const raw = timeToMinutes(e.target.value);
+
+                      // ❌ hard error if before day start
+                      if (raw < anchor) {
+                        toast.error("Invalid start time", {
+                          description: `Start time (${to12h(
+                            minutesToTime(raw)
+                          )}) is before your day start (${to12h(startTime)}).`,
+                        });
+                        // revert to day start so input shows a valid value
+                        const endM = Math.min(
+                          anchor + Number(editItem.duration || 0),
+                          endLimit
+                        );
+                        setEditItem({
+                          ...editItem,
+                          startTime: minutesToTime(anchor),
+                          endTime: minutesToTime(endM),
+                          duration: endM - anchor,
+                        });
+                        return;
+                      }
+
+                      // otherwise snap to your anchored grid and clamp to bounds
                       const snapped = clamp(
                         snapToAnchor(raw, interval, anchor, "nearest"),
                         anchor,
                         endLimit
                       );
-
                       if (snapped !== raw) {
-                        announceSnap("Start adjusted", raw, snapped); // Sonner toast
+                        announceSnap("Start adjusted", raw, snapped);
                       }
-
                       const endM = Math.min(
                         snapped + Number(editItem.duration || 0),
                         endLimit
