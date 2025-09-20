@@ -45,6 +45,14 @@ type Task = {
   color: string;
 };
 
+type DayExport = { dateKey: string; items: Task[] };
+
+type PlannerExport = {
+  exportedAt: string;
+  planner: { startTime: string; endTime: string; interval: number };
+  days: DayExport[]; // only non-empty days
+};
+
 const db = new Dexie("plannerDB");
 db.version(1).stores({ days: "dateKey", meta: "key" });
 const days = () => db.table("days");
@@ -255,7 +263,7 @@ export default function ExamScheduler() {
     );
     setSchedules({ ...schedules, [dateKey]: updated });
     setTaskName("");
-    setTaskDesc(""); // NEW
+    setTaskDesc("");
     toast.success("Task added", {
       description: `${newTask.name} — ${to12h(newTask.startTime)} to ${to12h(
         newTask.endTime
@@ -340,22 +348,7 @@ export default function ExamScheduler() {
     });
   };
 
-  // ---------- navigation ----------
-  const goToPreviousDay = () =>
-    setCurrentDate((d) => {
-      const nd = new Date(d);
-      nd.setDate(nd.getDate() - 1);
-      return nd;
-    });
-  const goToNextDay = () =>
-    setCurrentDate((d) => {
-      const nd = new Date(d);
-      nd.setDate(nd.getDate() + 1);
-      return nd;
-    });
-  const goToToday = () => setCurrentDate(new Date());
-
-  // Edit helpers
+  //  Helpers
   const openEdit = (item) => {
     setEditItem(item);
     setEditOpen(true);
@@ -478,26 +471,30 @@ export default function ExamScheduler() {
     interval,
     schedules,
   });
-  const loadFromData = (data) => {
-    try {
-      if (!data || typeof data !== "object") return;
-      if (data.startTime) setStartTime(data.startTime);
-      if (data.endTime) setEndTime(data.endTime);
-      if (data.interval) setInterval(Number(data.interval));
-      if (data.currentDate) setCurrentDate(new Date(data.currentDate));
-      if (data.schedules && typeof data.schedules === "object")
-        setSchedules(data.schedules);
-    } catch (e) {
-      /* swallow */
-    }
-  };
+  // Build a payload containing only days that have items (tasks/breaks)
+  const buildExportPayload = React.useCallback((): PlannerExport => {
+    const days: DayExport[] = Object.entries(schedules)
+      .map(([dateKey, items]) => ({
+        dateKey,
+        items: (items ?? []).filter((it) => it.duration > 0),
+      }))
+      .filter((d) => d.items.length > 0)
+      .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 
-  const saveJSON = async () => {
-    const json = JSON.stringify(serialize(), null, 2);
+    return {
+      exportedAt: new Date().toISOString(),
+      planner: { startTime, endTime, interval },
+      days,
+    };
+  }, [schedules, startTime, endTime, interval]);
+
+  const saveJSONAllDays = async () => {
+    const json = JSON.stringify(buildExportPayload(), null, 2);
+
     try {
       if (supportsFS && w?.showSaveFilePicker) {
         const handle = await w.showSaveFilePicker({
-          suggestedName: `planner-${formatDateKey(currentDate)}.json`,
+          suggestedName: `planner-all-${formatDateKey(new Date())}.json`,
           types: [
             {
               description: "JSON Files",
@@ -508,17 +505,44 @@ export default function ExamScheduler() {
         const writable = await (handle as any).createWritable();
         await writable.write(new Blob([json], { type: "application/json" }));
         await writable.close();
+        toast.success("Exported", { description: "All non-empty days saved." });
         return;
       }
-    } catch (e) {
-      // fall through to download
+    } catch {
+      // fall through
     }
+
     const blob = new Blob([json], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `planner-${formatDateKey(currentDate)}.json`;
+    a.download = `planner-all-${formatDateKey(new Date())}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    toast.success("Exported", {
+      description: "Downloaded all non-empty days.",
+    });
+  };
+
+  const loadFromData = (data: PlannerExport) => {
+    if (!data || !Array.isArray(data.days) || !data.planner) {
+      toast.error("Invalid file", {
+        description: "Expected planner export format.",
+      });
+      return;
+    }
+
+    setStartTime(data.planner.startTime);
+    setEndTime(data.planner.endTime);
+    setInterval(Number(data.planner.interval));
+
+    const map: Record<string, Task[]> = {};
+    for (const d of data.days) {
+      if (d?.dateKey && Array.isArray(d.items)) map[d.dateKey] = d.items;
+    }
+    setSchedules(map);
+    toast.success("Imported", {
+      description: `${data.days.length} day(s) loaded.`,
+    });
   };
 
   const openJSON = async () => {
@@ -535,25 +559,25 @@ export default function ExamScheduler() {
         });
         const file = await (handle as any).getFile();
         const text = await file.text();
-        const data = JSON.parse(text);
+        const data = JSON.parse(text) as PlannerExport;
         loadFromData(data);
         return;
       }
-    } catch (e) {
+    } catch {
       // fall back to <input type="file">
     }
     fileInputRef.current?.click();
   };
 
-  const onFilePicked = async (ev) => {
+  const onFilePicked = async (ev: React.ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     if (!file) return;
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      const data = JSON.parse(text) as PlannerExport;
       loadFromData(data);
-    } catch (e) {
-      /* ignore */
+    } catch {
+      toast.error("Failed to import", { description: "Invalid JSON format." });
     } finally {
       ev.target.value = "";
     }
@@ -675,21 +699,26 @@ export default function ExamScheduler() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={openJSON}
-                >
-                  Open JSON
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={saveJSON}
-                >
-                  Save JSON
-                </Button>
+              <div className="mt-4">
+                <label className="block text-xs text-neutral-500 mb-2">
+                  Backup modes
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={openJSON}
+                  >
+                    Open JSON
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={saveJSONAllDays}
+                  >
+                    Save All
+                  </Button>
+                </div>
               </div>
               <input
                 ref={fileInputRef}
