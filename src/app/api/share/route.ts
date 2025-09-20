@@ -1,49 +1,25 @@
 import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 
-type Task = {
-  id: number;
-  name: string;
-  description?: string;
-  startTime: string;
-  endTime: string;
-  duration: number;
-  color: string;
-};
-
-type Payload = {
-  dateKey: string; // "YYYY-MM-DD" for the shared day
-  items: Task[]; // tasks/breaks for that day
-  planner: { startTime: string; endTime: string; interval: number }; // meta
-  ttlSeconds?: number; // optional override (default 7 days)
-};
+const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Payload;
-
-    if (!body?.dateKey || !Array.isArray(body?.items)) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-    }
+    const payload = await req.json(); // your day payload (dateKey + items + planner, etc.)
 
     const id = crypto.randomUUID();
-    const key = `plan:day:${id}`;
-    const ttl = Number.isFinite(body.ttlSeconds!)
-      ? body.ttlSeconds!
-      : 60 * 60 * 24 * 7; // 7d
+    const key = `share:day:${id}`;
 
-    await kv.set(key, body, { ex: ttl });
+    // Store with TTL
+    await kv.set(key, payload, { ex: DEFAULT_TTL_SECONDS });
 
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (req.headers.get("origin") ?? "http://localhost:3000");
-    const url = `${origin}/shared/${id}`;
-
-    return NextResponse.json({ id, url }, { status: 201 });
-  } catch (e) {
+    // Build an absolute URL for convenience
+    const { origin } = new URL(req.url);
     return NextResponse.json(
-      { error: "Failed to create share" },
-      { status: 500 }
+      { id, url: `${origin}/share/${id}` },
+      { status: 201 }
     );
+  } catch (err) {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 }
