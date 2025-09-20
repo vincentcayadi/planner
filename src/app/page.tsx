@@ -232,6 +232,51 @@ export default function ExamScheduler() {
     }
   };
 
+  const shareCurrentDay = async () => {
+    const dateKey = (() => {
+      const d = currentDate!;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    })();
+
+    const items = getCurrentSchedule().filter((t) => t.duration > 0);
+    if (items.length === 0) {
+      toast.error("Nothing to share", {
+        description: "This day has no items.",
+      });
+      return;
+    }
+
+    const payload = {
+      dateKey,
+      items,
+      planner: { startTime, endTime, interval },
+    };
+
+    const res = await fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      toast.error("Share failed", { description: "Please try again." });
+      return;
+    }
+
+    const data = await res.json();
+    const url: string = data.url;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Share link copied", { description: url });
+    } catch {
+      toast.success("Share link ready", { description: url });
+    }
+  };
+
   // ---------- CRUD ----------
   const addTask = () => {
     const trimmed = taskName.trim();
@@ -753,7 +798,7 @@ export default function ExamScheduler() {
               </div>
               <div className="mt-4">
                 <label className="block text-xs text-neutral-500 mb-2">
-                  Backup modes
+                  Backup Options
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -977,6 +1022,13 @@ export default function ExamScheduler() {
                     className="w-full mt-2 text-destructive border-destructive"
                   >
                     Clear All
+                  </Button>
+                  <Button
+                    onClick={shareCurrentDay}
+                    size="sm"
+                    className="w-full mt-2"
+                  >
+                    Share This Day
                   </Button>
                 </>
               )}
