@@ -1038,11 +1038,9 @@ export default function ExamScheduler() {
 
         <div className="flex-1 p-6 overflow-hidden">
           <Card className="shadow-lg max-w-3xl mx-auto h-full flex flex-col bg-neutral-200/70 pt-6 overflow-clip pb-0">
-            <CardHeader className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter pl-4 pt-2 pr-4 pb-1">
-              <div className="text-5xl font-bold leading-none">
-                {currentDate.getDate()}
-              </div>
-              <div className="text-3xl font-semibold leading-none">
+            <CardHeader className="grid grid-cols-[1fr_auto] items-end text-neutral-500 tracking-tighter px-8 pt-2 pb-1 font-bold leading-none">
+              <div className="text-5xl">{currentDate.getDate()}</div>
+              <div className="text-3xl">
                 {currentDate
                   .toLocaleDateString("en-US", { weekday: "short" })
                   .toUpperCase()}
@@ -1187,7 +1185,6 @@ export default function ExamScheduler() {
                       const endLimit = timeToMinutes(endTime);
                       const raw = timeToMinutes(e.target.value);
 
-                      // ❌ hard error if before day start
                       if (raw < anchor) {
                         toast.error("Invalid start time", {
                           description: `Start time (${to12h(
