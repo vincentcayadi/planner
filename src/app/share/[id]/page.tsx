@@ -141,11 +141,11 @@ export default async function SharePage({
         </header>
 
         <div className="shadow-lg rounded-2xl overflow-hidden bg-white/70 backdrop-blur">
-          <div className="grid grid-cols-[1fr_auto] items-center p-4 border-b border-neutral-200 text-neutral-700">
-            <div className="text-4xl font-semibold leading-none">
+          <div className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter">
+            <div className="pl-4 pt-2 text-5xl font-bold leading-none">
               {date.getDate()}
             </div>
-            <div className="text-2xl font-medium leading-none">
+            <div className="pr-4 pb-1 self-end text-3xl font-semibold leading-none">
               {date
                 .toLocaleDateString(undefined, { weekday: "short" })
                 .toUpperCase()}
