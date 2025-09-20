@@ -1037,33 +1037,28 @@ export default function ExamScheduler() {
         </div>
 
         <div className="flex-1 p-6 overflow-hidden">
-          <Card className="shadow-lg max-w-3xl mx-auto h-full flex flex-col bg-neutral-200/70 py-0 pt-6 overflow-clip">
-            <CardHeader>
-              <div className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter">
-                <div className="pl-4 pt-2 text-5xl font-bold leading-none">
-                  {currentDate.getDate()}
-                </div>
-                <div className="pr-4 pb-1 self-end text-3xl font-semibold leading-none">
-                  {currentDate
-                    .toLocaleDateString("en-US", { weekday: "short" })
-                    .toUpperCase()}
-                </div>
+          <Card className="shadow-lg max-w-3xl mx-auto h-full flex flex-col bg-neutral-200/70 pt-6 overflow-clip pb-0">
+            <CardHeader className="grid grid-cols-[1fr_auto] items-end text-neutral-600 tracking-tighter pl-4 pt-2 pr-4 pb-1">
+              <div className="text-5xl font-bold leading-none">
+                {currentDate.getDate()}
+              </div>
+              <div className="text-3xl font-semibold leading-none">
+                {currentDate
+                  .toLocaleDateString("en-US", { weekday: "short" })
+                  .toUpperCase()}
               </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0">
-              <div className="min-h-full">
+
+            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col">
+              <div className="flex-1">
                 {getScheduleDisplay().map((slot, idx) => {
                   if (!slot.task) {
                     return (
                       <div
                         key={`${to12h(slot.time)}-${idx}`}
-                        className="grid [grid-template-columns:80px_1fr] md:[grid-template-columns:96px_1fr] border-b border-neutral-200"
+                        className="grid grid-cols-[80px_1fr] md:grid-cols-[96px_1fr] border-b border-neutral-200"
                       >
-                        <div
-                          className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200
-                  text-xs md:text-sm font-semibold tracking-tighter text-neutral-700
-                  flex items-center whitespace-nowrap tabular-nums"
-                        >
+                        <div className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200 text-xs md:text-sm font-semibold tracking-tighter text-neutral-700 flex items-center whitespace-nowrap tabular-nums">
                           {to12h(slot.time)}
                         </div>
                         <div className="bg-neutral-50 px-3 md:px-4 py-3 md:py-4 text-sm text-neutral-400 flex items-center">
@@ -1072,41 +1067,34 @@ export default function ExamScheduler() {
                       </div>
                     );
                   }
+
                   const c = colors.find((x) => x.name === slot.task.color);
                   return (
                     <div
                       key={`${slot.task.id}-${idx}`}
-                      className="grid [grid-template-columns:80px_1fr] md:[grid-template-columns:96px_1fr] border-b border-neutral-200"
+                      className="grid grid-cols-[80px_1fr] md:grid-cols-[96px_1fr] border-b border-neutral-200"
                     >
-                      <div
-                        className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200
-                  text-xs md:text-sm font-semibold tracking-tighter text-neutral-700
-                  flex items-start whitespace-nowrap tabular-nums"
-                      >
+                      <div className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200 text-xs md:text-sm font-semibold tracking-tighter text-neutral-700 flex items-start whitespace-nowrap tabular-nums">
                         {to12h(slot.time)}
                       </div>
                       <div
-                        className={`p-4 md:p-6 ${c?.bg} flex items-center justify-center text-center`}
+                        className={`p-4 md:p-6 ${c?.bg} ${c?.text} flex flex-col items-center justify-center text-center gap-1 md:gap-2`}
                         style={{
                           minHeight: `${slot.rowSpan * 60}px`,
                           height: `${slot.rowSpan * 60}px`,
                         }}
                       >
-                        <div>
-                          <div
-                            className={`font-semibold ${c?.text} text-lg md:text-xl mb-1 md:mb-2`}
-                          >
-                            {slot.task.name}
+                        <div className="font-semibold text-lg md:text-xl">
+                          {slot.task.name}
+                        </div>
+                        {slot.task.description && (
+                          <div className="text-xs md:text-sm text-neutral-700 whitespace-pre-wrap">
+                            {slot.task.description}
                           </div>
-                          {slot.task.description ? (
-                            <div className="text-xs md:text-sm text-neutral-700 mb-1 whitespace-pre-wrap">
-                              {slot.task.description}
-                            </div>
-                          ) : null}
-                          <div className="text-xs md:text-sm text-neutral-600">
-                            {to12h(slot.task.startTime)} –{" "}
-                            {to12h(slot.task.endTime)}
-                          </div>
+                        )}
+                        <div className="text-xs md:text-sm text-neutral-600">
+                          {to12h(slot.task.startTime)} –{" "}
+                          {to12h(slot.task.endTime)}
                         </div>
                       </div>
                     </div>
