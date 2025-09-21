@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { kv } from "@/lib/kv";
 
-const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+const DEFAULT_TTL_SECONDS = 60 * 60 * 24;
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const { origin } = new URL(req.url);
     return NextResponse.json(
       { id, url: `${origin}/share/${id}` },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (err) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });

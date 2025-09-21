@@ -1,6 +1,8 @@
 # Planner
 
-A minimal daily planner focused on revision blocks, with conflict handling, automatic break filling, and local-only persistence (IndexedDB via Dexie). Built with Next.js/React, Tailwind, and shadcn/ui.
+A minimal daily planner focused on revision blocks, with conflict handling, automatic break filling, and local-only persistence. 
+
+Built with ❤️
 
 ## ✨ Features
 
@@ -11,6 +13,7 @@ A minimal daily planner focused on revision blocks, with conflict handling, auto
 - **Per-day schedules** with a clean time grid. The last row respects your set **End** time.
 - **Local-first storage** using **Dexie (IndexedDB)** — no auth, no server.
 - **Import/Export JSON** for backup/restore.
+- **One-day share links** to publish a single day to a read-only URL with an expiry of one day
 
 
 ## 🧱 Tech Stack
@@ -20,6 +23,7 @@ A minimal daily planner focused on revision blocks, with conflict handling, auto
 - shadcn/ui
 - lucide-react
 - Dexie (IndexedDB)
+- Upstash Redis
 
 
 ## 🕹 Usage
@@ -50,34 +54,3 @@ This means:
 - Clearing browser storage (site data) will remove it.
 - No server/database, no authentication required.
 
-### JSON Format (example)
-
-```json
-{
-  "version": 1,
-  "currentDate": "2025-09-20",
-  "startTime": "08:00",
-  "endTime": "23:30",
-  "interval": 30,
-  "schedules": {
-    "2025-09-20": [
-      {
-        "id": 1695200000000,
-        "name": "Chemistry Paper 1",
-        "description": "MCQ practice set",
-        "startTime": "09:00",
-        "endTime": "10:00",
-        "duration": 60,
-        "color": "blue"
-      }
-    ]
-  }
-}
-```
-
-## ⚖️ Conflict Rules
-
-- A new/edited event **conflicts** if its time range overlaps any existing event the user hasn’t decided to replace.
-- On conflict, you’ll see a dialog listing conflicting items:
-  - **Override**: replace conflicts with your new/edited event.
-  - **Cancel**: keep existing items as-is.
