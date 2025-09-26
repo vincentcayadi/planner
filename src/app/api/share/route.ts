@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { kv } from "@/lib/kv";
+import { NextResponse } from 'next/server';
+import { kv } from '@/lib/kv';
 
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24;
 
@@ -15,11 +15,8 @@ export async function POST(req: Request) {
 
     // Build an absolute URL for convenience
     const { origin } = new URL(req.url);
-    return NextResponse.json(
-      { id, url: `${origin}/share/${id}` },
-      { status: 201 },
-    );
+    return NextResponse.json({ id, url: `${origin}/share/${id}` }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 }

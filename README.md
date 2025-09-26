@@ -1,6 +1,6 @@
 # Planner
 
-A minimal daily planner focused on revision blocks, with conflict handling, automatic break filling, and local-only persistence. 
+A minimal daily planner focused on revision blocks, with conflict handling, automatic break filling, and local-only persistence.
 
 Built with ❤️
 
@@ -15,7 +15,6 @@ Built with ❤️
 - **Import/Export JSON** for backup/restore.
 - **One-day share links** to publish a single day to a read-only URL with an expiry of one day
 
-
 ## 🧱 Tech Stack
 
 - Next.js
@@ -24,7 +23,6 @@ Built with ❤️
 - lucide-react
 - Dexie (IndexedDB)
 - Upstash Redis
-
 
 ## 🕹 Usage
 
@@ -50,7 +48,7 @@ Data is stored locally only:
 - Table `meta`: `{ key: "startTime" | "endTime" | "interval", value: string | number }`
 
 This means:
+
 - Works offline.
 - Clearing browser storage (site data) will remove it.
 - No server/database, no authentication required.
-

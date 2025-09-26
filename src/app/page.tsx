@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState } from "react";
-import { Trash2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import React, { useMemo, useState } from 'react';
+import { Trash2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -30,10 +30,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import Dexie from "dexie";
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import Dexie from 'dexie';
 
 type Task = {
   id: number;
@@ -53,27 +53,25 @@ type PlannerExport = {
   days: DayExport[]; // only non-empty days
 };
 
-const db = new Dexie("plannerDB");
-db.version(1).stores({ days: "dateKey", meta: "key" });
-const days = () => db.table("days");
-const meta = () => db.table("meta");
+const db = new Dexie('plannerDB');
+db.version(1).stores({ days: 'dateKey', meta: 'key' });
+const days = () => db.table('days');
+const meta = () => db.table('meta');
 
 export default function ExamScheduler() {
   // ---------- state ----------
   const [schedules, setSchedules] = useState<Record<string, Task[]>>({});
-  const [currentDate, setCurrentDate] = React.useState<Date | undefined>(
-    new Date()
-  );
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("23:30");
+  const [currentDate, setCurrentDate] = React.useState<Date | undefined>(new Date());
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('23:30');
   const [interval, setInterval] = useState(30); // minutes
 
   // Add task form state
-  const [taskName, setTaskName] = useState("");
-  const [taskDesc, setTaskDesc] = useState("");
-  const [taskStartTime, setTaskStartTime] = useState("08:00");
-  const [taskDuration, setTaskDuration] = useState("60"); // minutes (string for Select)
-  const [selectedColor, setSelectedColor] = useState("blue");
+  const [taskName, setTaskName] = useState('');
+  const [taskDesc, setTaskDesc] = useState('');
+  const [taskStartTime, setTaskStartTime] = useState('08:00');
+  const [taskDuration, setTaskDuration] = useState('60'); // minutes (string for Select)
+  const [selectedColor, setSelectedColor] = useState('blue');
   const [nameError, setNameError] = useState(false);
 
   // Conflict dialog state
@@ -96,22 +94,19 @@ export default function ExamScheduler() {
   const [editConflictOpen, setEditConflictOpen] = useState(false);
 
   const colors = [
-    { name: "blue", bg: "bg-blue-200", text: "text-blue-800" },
-    { name: "green", bg: "bg-green-200", text: "text-green-800" },
-    { name: "yellow", bg: "bg-yellow-200", text: "text-yellow-800" },
-    { name: "purple", bg: "bg-purple-200", text: "text-purple-800" },
-    { name: "pink", bg: "bg-pink-200", text: "text-pink-800" },
-    { name: "orange", bg: "bg-orange-200", text: "text-orange-800" },
-    { name: "cyan", bg: "bg-cyan-200", text: "text-cyan-800" },
-    { name: "neutral", bg: "bg-neutral-200", text: "text-neutral-800" },
+    { name: 'blue', bg: 'bg-blue-200', text: 'text-blue-800' },
+    { name: 'green', bg: 'bg-green-200', text: 'text-green-800' },
+    { name: 'yellow', bg: 'bg-yellow-200', text: 'text-yellow-800' },
+    { name: 'purple', bg: 'bg-purple-200', text: 'text-purple-800' },
+    { name: 'pink', bg: 'bg-pink-200', text: 'text-pink-800' },
+    { name: 'orange', bg: 'bg-orange-200', text: 'text-orange-800' },
+    { name: 'cyan', bg: 'bg-cyan-200', text: 'text-cyan-800' },
+    { name: 'neutral', bg: 'bg-neutral-200', text: 'text-neutral-800' },
   ];
 
   // ---------- helpers ----------
   // tiny debounce util so we don't write on every keystroke
-  function useDebouncedCallback<T extends (...args: any[]) => void>(
-    fn: T,
-    delay: number
-  ) {
+  function useDebouncedCallback<T extends (...args: any[]) => void>(fn: T, delay: number) {
     const fnRef = React.useRef<T>(fn);
     React.useEffect(() => {
       fnRef.current = fn;
@@ -133,52 +128,44 @@ export default function ExamScheduler() {
       showOpenFilePicker?: (opts?: any) => Promise<any>;
     };
 
-  const w: FSWin | undefined =
-    typeof window !== "undefined" ? (window as FSWin) : undefined;
+  const w: FSWin | undefined = typeof window !== 'undefined' ? (window as FSWin) : undefined;
 
   const supportsFS = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
   const formatDateKey = (d: Date): string => {
     const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   };
 
   const timeToMinutes = (t: string): number => {
-    const [h, m] = t.split(":").map(Number);
+    const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
   };
 
   const minutesToTime = (mins: number): string => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
   // display helper: 24h -> 12h with AM/PM
   const to12h = (t: string): string => {
-    if (!t) return "";
-    const [H, M] = t.split(":").map(Number);
-    const ampm = H >= 12 ? "PM" : "AM";
+    if (!t) return '';
+    const [H, M] = t.split(':').map(Number);
+    const ampm = H >= 12 ? 'PM' : 'AM';
     const h12 = H % 12 || 12;
-    return `${h12}:${String(M).padStart(2, "0")} ${ampm}`;
+    return `${h12}:${String(M).padStart(2, '0')} ${ampm}`;
   };
 
-  const overlaps = (
-    aStart: number,
-    aEnd: number,
-    bStart: number,
-    bEnd: number
-  ): boolean => aStart < bEnd && bStart < aEnd;
+  const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number): boolean =>
+    aStart < bEnd && bStart < aEnd;
 
   // Generate time slots based on current start/end/interval
   const timeSlots = useMemo<string[]>(() => {
     const out: string[] = [];
-    const safeInterval = Math.max(
-      5,
-      Number.isFinite(interval) ? Number(interval) : 30
-    );
+    const safeInterval = Math.max(5, Number.isFinite(interval) ? Number(interval) : 30);
     let t = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
     if (end <= t) return out;
@@ -191,43 +178,33 @@ export default function ExamScheduler() {
 
   // Duration options (1× to 12× interval)
   const durationOptions = useMemo(() => {
-    const safeInterval = Math.max(
-      5,
-      Number.isFinite(interval) ? Number(interval) : 30
-    );
+    const safeInterval = Math.max(5, Number.isFinite(interval) ? Number(interval) : 30);
     return Array.from({ length: 12 }, (_, i) => (i + 1) * safeInterval);
   }, [interval]);
 
   const getCurrentSchedule = () => schedules[formatDateKey(currentDate)] || [];
 
-  type SnapMode = "nearest" | "floor" | "ceil";
+  type SnapMode = 'nearest' | 'floor' | 'ceil';
 
-  const clamp = (n: number, lo: number, hi: number) =>
-    Math.max(lo, Math.min(hi, n));
+  const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
   /** Snap minutes to a step *anchored* at `anchorMin` (your day start). */
   const snapToAnchor = (
     mins: number,
     step: number,
     anchorMin: number,
-    mode: SnapMode = "nearest"
+    mode: SnapMode = 'nearest'
   ) => {
     const rel = (mins - anchorMin) / step;
     const q =
-      mode === "floor"
-        ? Math.floor(rel)
-        : mode === "ceil"
-        ? Math.ceil(rel)
-        : Math.round(rel);
+      mode === 'floor' ? Math.floor(rel) : mode === 'ceil' ? Math.ceil(rel) : Math.round(rel);
     return anchorMin + q * step;
   };
 
   const announceSnap = (label: string, fromMin: number, toMin: number) => {
     if (fromMin !== toMin) {
       toast(label, {
-        description: `${to12h(minutesToTime(fromMin))} → ${to12h(
-          minutesToTime(toMin)
-        )}`,
+        description: `${to12h(minutesToTime(fromMin))} → ${to12h(minutesToTime(toMin))}`,
       });
     }
   };
@@ -236,15 +213,15 @@ export default function ExamScheduler() {
     const dateKey = (() => {
       const d = currentDate!;
       const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
     })();
 
     const items = getCurrentSchedule().filter((t) => t.duration > 0);
     if (items.length === 0) {
-      toast.error("Nothing to share", {
-        description: "This day has no items.",
+      toast.error('Nothing to share', {
+        description: 'This day has no items.',
       });
       return;
     }
@@ -255,14 +232,14 @@ export default function ExamScheduler() {
       planner: { startTime, endTime, interval },
     };
 
-    const res = await fetch("/api/share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      toast.error("Share failed", { description: "Please try again." });
+      toast.error('Share failed', { description: 'Please try again.' });
       return;
     }
 
@@ -271,9 +248,9 @@ export default function ExamScheduler() {
 
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Share link copied", { description: url });
+      toast.success('Share link copied', { description: url });
     } catch {
-      toast.success("Share link ready", { description: url });
+      toast.success('Share link ready', { description: url });
     }
   };
 
@@ -282,8 +259,8 @@ export default function ExamScheduler() {
     const trimmed = taskName.trim();
     if (!trimmed) {
       setNameError(true);
-      toast.error("Missing title", {
-        description: "Enter a Subject / Paper / Task.",
+      toast.error('Missing title', {
+        description: 'Enter a Subject / Paper / Task.',
       });
       return;
     }
@@ -295,7 +272,7 @@ export default function ExamScheduler() {
 
     // must not be before the day's start (free-form day, but tasks can't precede it)
     if (rawStart < anchor) {
-      toast.error("Invalid start time", {
+      toast.error('Invalid start time', {
         description: `Start time (${to12h(
           taskStartTime
         )}) is before your day start (${to12h(startTime)}).`,
@@ -305,19 +282,19 @@ export default function ExamScheduler() {
 
     // snap ONLY the task start to the anchored grid (nearest by default)
     const snappedStart = clamp(
-      snapToAnchor(rawStart, interval, anchor, "nearest"),
+      snapToAnchor(rawStart, interval, anchor, 'nearest'),
       anchor,
       endLimit
     );
-    announceSnap("Task start adjusted", rawStart, snappedStart);
+    announceSnap('Task start adjusted', rawStart, snappedStart);
 
     const startM = snappedStart;
     const durMin = parseInt(taskDuration, 10) || 0;
     const endM = Math.min(startM + durMin, endLimit);
 
     if (endM <= startM) {
-      toast.error("Invalid duration", {
-        description: "The task would end before (or at) it starts.",
+      toast.error('Invalid duration', {
+        description: 'The task would end before (or at) it starts.',
       });
       return;
     }
@@ -328,7 +305,7 @@ export default function ExamScheduler() {
     const newTask = {
       id: Date.now(),
       name: trimmed,
-      description: taskDesc.trim() || "",
+      description: taskDesc.trim() || '',
       startTime: minutesToTime(startM),
       endTime: minutesToTime(endM),
       duration: endM - startM,
@@ -337,18 +314,13 @@ export default function ExamScheduler() {
 
     // conflict detection
     const hits = current.filter((t) =>
-      overlaps(
-        startM,
-        endM,
-        timeToMinutes(t.startTime),
-        timeToMinutes(t.endTime)
-      )
+      overlaps(startM, endM, timeToMinutes(t.startTime), timeToMinutes(t.endTime))
     );
     if (hits.length) {
       setConflicts(hits);
       setPendingTask({ task: newTask, dateKey });
       setDialogOpen(true);
-      toast.error("Time conflict", {
+      toast.error('Time conflict', {
         description: `${trimmed} overlaps ${hits.length} item(s).`,
       });
       return;
@@ -359,21 +331,17 @@ export default function ExamScheduler() {
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
     setSchedules({ ...schedules, [dateKey]: updated });
-    setTaskName("");
-    setTaskDesc("");
-    toast.success("Task added", {
-      description: `${newTask.name} — ${to12h(newTask.startTime)} to ${to12h(
-        newTask.endTime
-      )}`,
+    setTaskName('');
+    setTaskDesc('');
+    toast.success('Task added', {
+      description: `${newTask.name} — ${to12h(newTask.startTime)} to ${to12h(newTask.endTime)}`,
     });
   };
 
   const overrideConflicts = () => {
     if (!pendingTask) return;
     const { task, dateKey } = pendingTask;
-    const current = [...getCurrentSchedule()].filter(
-      (t) => !conflicts.some((c) => c.id === t.id)
-    );
+    const current = [...getCurrentSchedule()].filter((t) => !conflicts.some((c) => c.id === t.id));
     const updated = [...current, task].sort(
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
@@ -381,15 +349,15 @@ export default function ExamScheduler() {
     setPendingTask(null);
     setConflicts([]);
     setDialogOpen(false);
-    setTaskName("");
-    toast.success("Task overridden successfully");
+    setTaskName('');
+    toast.success('Task overridden successfully');
   };
 
   const removeTask = (id: number) => {
     const dateKey = formatDateKey(currentDate);
     const filtered = getCurrentSchedule().filter((t) => t.id !== id);
     setSchedules({ ...schedules, [dateKey]: filtered });
-    toast.error("Task Deleted");
+    toast.error('Task Deleted');
   };
 
   const clearAll = () => {
@@ -397,7 +365,7 @@ export default function ExamScheduler() {
     const next = { ...schedules };
     delete next[dateKey];
     setSchedules(next);
-    toast.error("All events for this day were removed");
+    toast.error('All events for this day were removed');
   };
 
   // Auto-fill gaps as Breaks
@@ -417,11 +385,11 @@ export default function ExamScheduler() {
       if (s > cursor) {
         breaks.push({
           id: Date.now() + Math.random(),
-          name: "Break",
+          name: 'Break',
           startTime: minutesToTime(cursor),
           endTime: minutesToTime(s),
           duration: s - cursor,
-          color: "cyan",
+          color: 'cyan',
         });
       }
       cursor = Math.max(cursor, e);
@@ -429,19 +397,19 @@ export default function ExamScheduler() {
     if (cursor < endM)
       breaks.push({
         id: Date.now() + Math.random(),
-        name: "Break",
+        name: 'Break',
         startTime: minutesToTime(cursor),
         endTime: minutesToTime(endM),
         duration: endM - cursor,
-        color: "cyan",
+        color: 'cyan',
       });
 
     const updated = [...current, ...breaks].sort(
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
     setSchedules({ ...schedules, [dateKey]: updated });
-    toast.success("Breaks filled", {
-      description: "Automatically inserted free-time blocks.",
+    toast.success('Breaks filled', {
+      description: 'Automatically inserted free-time blocks.',
     });
   };
 
@@ -455,7 +423,7 @@ export default function ExamScheduler() {
 
     // 1) Start must be within the day's window
     if (timeToMinutes(editItem.startTime) < timeToMinutes(startTime)) {
-      toast.error("Invalid start time", {
+      toast.error('Invalid start time', {
         description: `Start time (${to12h(
           editItem.startTime
         )}) is before your day start (${to12h(startTime)}).`,
@@ -474,9 +442,9 @@ export default function ExamScheduler() {
 
     // 2) Block zero/negative duration after clamping
     if (endComputed <= startBound) {
-      toast.error("Invalid duration", {
+      toast.error('Invalid duration', {
         description:
-          "The resulting duration is zero or negative. Adjust the start time or duration.",
+          'The resulting duration is zero or negative. Adjust the start time or duration.',
       });
       return;
     }
@@ -490,12 +458,7 @@ export default function ExamScheduler() {
 
     // 3) Conflict check against the rest of the items
     const hits = others.filter((t) =>
-      overlaps(
-        startBound,
-        endComputed,
-        timeToMinutes(t.startTime),
-        timeToMinutes(t.endTime)
-      )
+      overlaps(startBound, endComputed, timeToMinutes(t.startTime), timeToMinutes(t.endTime))
     );
     if (hits.length) {
       setEditConflicts(hits);
@@ -511,17 +474,14 @@ export default function ExamScheduler() {
 
     setSchedules({ ...schedules, [dateKey]: updated });
     setEditOpen(false);
-    toast.success("Saved changes", { description: "Item updated." });
+    toast.success('Saved changes', { description: 'Item updated.' });
   };
 
   // Build display rows with proper span
   const getScheduleDisplay = () => {
     const schedule = getCurrentSchedule();
     const display = [];
-    const safeInterval = Math.max(
-      5,
-      Number.isFinite(interval) ? Number(interval) : 30
-    );
+    const safeInterval = Math.max(5, Number.isFinite(interval) ? Number(interval) : 30);
     const dayEnd = timeToMinutes(endTime);
 
     for (let i = 0; i < timeSlots.length; i++) {
@@ -547,17 +507,16 @@ export default function ExamScheduler() {
       const ongoing = schedule.find(
         (x) => tm >= timeToMinutes(x.startTime) && tm < timeToMinutes(x.endTime)
       );
-      if (!ongoing)
-        display.push({ time: t, task: null, isTaskStart: false, rowSpan: 1 });
+      if (!ongoing) display.push({ time: t, task: null, isTaskStart: false, rowSpan: 1 });
     }
     return display;
   };
 
   const currentSchedule = getCurrentSchedule();
-  const dateString = currentDate.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
+  const dateString = currentDate.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
   });
   // JSON deserialization
   const serialize = () => ({
@@ -594,36 +553,36 @@ export default function ExamScheduler() {
           suggestedName: `planner-all-${formatDateKey(new Date())}.json`,
           types: [
             {
-              description: "JSON Files",
-              accept: { "application/json": [".json"] },
+              description: 'JSON Files',
+              accept: { 'application/json': ['.json'] },
             },
           ],
         });
         const writable = await (handle as any).createWritable();
-        await writable.write(new Blob([json], { type: "application/json" }));
+        await writable.write(new Blob([json], { type: 'application/json' }));
         await writable.close();
-        toast.success("Exported", { description: "All non-empty days saved." });
+        toast.success('Exported', { description: 'All non-empty days saved.' });
         return;
       }
     } catch {
       // fall through
     }
 
-    const blob = new Blob([json], { type: "application/json" });
-    const a = document.createElement("a");
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `planner-all-${formatDateKey(new Date())}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast.success("Exported", {
-      description: "Downloaded all non-empty days.",
+    toast.success('Exported', {
+      description: 'Downloaded all non-empty days.',
     });
   };
 
   const loadFromData = (data: PlannerExport) => {
     if (!data || !Array.isArray(data.days) || !data.planner) {
-      toast.error("Invalid file", {
-        description: "Expected planner export format.",
+      toast.error('Invalid file', {
+        description: 'Expected planner export format.',
       });
       return;
     }
@@ -637,7 +596,7 @@ export default function ExamScheduler() {
       if (d?.dateKey && Array.isArray(d.items)) map[d.dateKey] = d.items;
     }
     setSchedules(map);
-    toast.success("Imported", {
+    toast.success('Imported', {
       description: `${data.days.length} day(s) loaded.`,
     });
   };
@@ -649,8 +608,8 @@ export default function ExamScheduler() {
           multiple: false,
           types: [
             {
-              description: "JSON Files",
-              accept: { "application/json": [".json"] },
+              description: 'JSON Files',
+              accept: { 'application/json': ['.json'] },
             },
           ],
         });
@@ -674,9 +633,9 @@ export default function ExamScheduler() {
       const data = JSON.parse(text) as PlannerExport;
       loadFromData(data);
     } catch {
-      toast.error("Failed to import", { description: "Invalid JSON format." });
+      toast.error('Failed to import', { description: 'Invalid JSON format.' });
     } finally {
-      ev.target.value = "";
+      ev.target.value = '';
     }
   };
 
@@ -693,9 +652,9 @@ export default function ExamScheduler() {
           setSchedules(loaded);
         }
         const [st, et, itv] = await Promise.all([
-          meta().get("startTime"),
-          meta().get("endTime"),
-          meta().get("interval"),
+          meta().get('startTime'),
+          meta().get('endTime'),
+          meta().get('interval'),
         ]);
         if (st?.value) setStartTime(st.value);
         if (et?.value) setEndTime(et.value);
@@ -726,9 +685,9 @@ export default function ExamScheduler() {
     (async () => {
       try {
         await meta().bulkPut([
-          { key: "startTime", value: startTime },
-          { key: "endTime", value: endTime },
-          { key: "interval", value: interval },
+          { key: 'startTime', value: startTime },
+          { key: 'endTime', value: endTime },
+          { key: 'interval', value: interval },
         ]);
       } catch (e) {
         /* ignore */
@@ -739,9 +698,9 @@ export default function ExamScheduler() {
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
       <div className="flex h-screen">
-        <div className="w-80 bg-white shadow-lg p-6 overflow-y-auto flex flex-col gap-4">
+        <div className="flex w-80 flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg">
           <Card className="gap-0 py-3">
-            <CardContent className="pt-0 flex justify-center">
+            <CardContent className="flex justify-center pt-0">
               <Calendar
                 mode="single"
                 selected={currentDate}
@@ -763,7 +722,7 @@ export default function ExamScheduler() {
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="text-sm pr-3 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
@@ -772,18 +731,13 @@ export default function ExamScheduler() {
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="text-sm pr-3 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
               <div className="mt-2">
-                <label className="text-xs text-neutral-500">
-                  Interval (minutes)
-                </label>
-                <Select
-                  value={String(interval)}
-                  onValueChange={(v) => setInterval(Number(v))}
-                >
+                <label className="text-xs text-neutral-500">Interval (minutes)</label>
+                <Select value={String(interval)} onValueChange={(v) => setInterval(Number(v))}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select interval" />
                   </SelectTrigger>
@@ -797,22 +751,12 @@ export default function ExamScheduler() {
                 </Select>
               </div>
               <div className="mt-4">
-                <label className="block text-xs text-neutral-500 mb-2">
-                  Backup Options
-                </label>
+                <label className="mb-2 block text-xs text-neutral-500">Backup Options</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    onClick={openJSON}
-                  >
+                  <Button variant="secondary" className="w-full" onClick={openJSON}>
                     Open JSON
                   </Button>
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    onClick={saveJSONAllDays}
-                  >
+                  <Button variant="secondary" className="w-full" onClick={saveJSONAllDays}>
                     Save All
                   </Button>
                 </div>
@@ -831,7 +775,7 @@ export default function ExamScheduler() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Add Task </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 space-y-3">
+            <CardContent className="space-y-3 pt-0">
               <div>
                 <Input
                   placeholder="Subject / Paper / Task"
@@ -839,15 +783,11 @@ export default function ExamScheduler() {
                   onChange={(e) => setTaskName(e.target.value)}
                   aria-invalid={nameError}
                   className={`${
-                    nameError
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
+                    nameError ? 'border-destructive focus-visible:ring-destructive' : ''
                   }`}
                 />
                 {nameError && (
-                  <p className="mt-1 text-xs text-destructive">
-                    This field is required.
-                  </p>
+                  <p className="text-destructive mt-1 text-xs">This field is required.</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -865,18 +805,16 @@ export default function ExamScheduler() {
                       // If before day start: show error, then auto-correct to the nearest valid tick (≥ day start).
                       if (raw < anchor) {
                         const snapped = clamp(
-                          snapToAnchor(raw, interval, anchor, "nearest"),
+                          snapToAnchor(raw, interval, anchor, 'nearest'),
                           anchor,
                           endLimit
                         );
-                        toast.error("Invalid start time", {
+                        toast.error('Invalid start time', {
                           description: `Start time (${to12h(
                             e.target.value
                           )}) is before your day start (${to12h(
                             startTime
-                          )}). Auto-corrected to ${to12h(
-                            minutesToTime(snapped)
-                          )}.`,
+                          )}). Auto-corrected to ${to12h(minutesToTime(snapped))}.`,
                         });
                         setTaskStartTime(minutesToTime(snapped));
                         return;
@@ -884,25 +822,22 @@ export default function ExamScheduler() {
 
                       // Otherwise snap normally within the day's bounds.
                       const snapped = clamp(
-                        snapToAnchor(raw, interval, anchor, "nearest"),
+                        snapToAnchor(raw, interval, anchor, 'nearest'),
                         anchor,
                         endLimit
                       );
 
                       if (snapped !== raw) {
-                        announceSnap("Task start adjusted", raw, snapped);
+                        announceSnap('Task start adjusted', raw, snapped);
                         setTaskStartTime(minutesToTime(snapped));
                       }
                     }}
-                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    className="[appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">Duration</label>
-                  <Select
-                    value={String(taskDuration)}
-                    onValueChange={(v) => setTaskDuration(v)}
-                  >
+                  <Select value={String(taskDuration)} onValueChange={(v) => setTaskDuration(v)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Duration" />
                     </SelectTrigger>
@@ -927,9 +862,7 @@ export default function ExamScheduler() {
                 />
               </div>
               <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
-                  Palette
-                </label>
+                <label className="mb-2 block text-xs text-neutral-500">Palette</label>
                 <div className="grid grid-cols-4 gap-2">
                   {colors.map((c) => (
                     <button
@@ -937,9 +870,7 @@ export default function ExamScheduler() {
                       type="button"
                       onClick={() => setSelectedColor(c.name)}
                       className={`h-8 rounded-lg ${c.bg} ${
-                        selectedColor === c.name
-                          ? "ring-2 ring-offset-2 ring-neutral-400"
-                          : ""
+                        selectedColor === c.name ? 'ring-2 ring-neutral-400 ring-offset-2' : ''
                       } cursor-pointer`}
                       aria-label={c.name}
                     />
@@ -958,21 +889,19 @@ export default function ExamScheduler() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Current Items</CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 space-y-2">
+            <CardContent className="space-y-2 pt-0">
               {currentSchedule.map((task) => {
                 const c = colors.find((x) => x.name === task.color);
                 return (
                   <div
                     key={task.id}
-                    className={`p-2 rounded ${c?.bg} flex items-center justify-between`}
+                    className={`rounded p-2 ${c?.bg} flex items-center justify-between`}
                   >
                     <div>
-                      <div className={`font-medium ${c?.text} text-sm`}>
-                        {task.name}
-                      </div>
+                      <div className={`font-medium ${c?.text} text-sm`}>{task.name}</div>
                       <div className="text-xs text-neutral-600">
                         {task.description ? (
-                          <div className="text-neutral-700 mb-0.5 whitespace-pre-wrap">
+                          <div className="mb-0.5 whitespace-pre-wrap text-neutral-700">
                             {task.description}
                           </div>
                         ) : null}
@@ -986,7 +915,7 @@ export default function ExamScheduler() {
                         variant="ghost"
                         className="h-6 w-6 p-0 text-neutral-700 hover:bg-neutral-100"
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Pencil className="h-3 w-3" />
                       </Button>
                       <Button
                         onClick={() => removeTask(task.id)}
@@ -994,16 +923,14 @@ export default function ExamScheduler() {
                         variant="ghost"
                         className="h-6 w-6 p-0 text-red-600 hover:bg-red-100"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
                 );
               })}
               {currentSchedule.length === 0 && (
-                <div className="text-sm text-neutral-500 text-center py-4">
-                  No tasks scheduled
-                </div>
+                <div className="py-4 text-center text-sm text-neutral-500">No tasks scheduled</div>
               )}
               {currentSchedule.length > 0 && (
                 <>
@@ -1011,7 +938,7 @@ export default function ExamScheduler() {
                     onClick={autoFillBreaks}
                     variant="outline"
                     size="sm"
-                    className="w-full mt-3"
+                    className="mt-3 w-full"
                   >
                     Fill Breaks
                   </Button>
@@ -1019,15 +946,11 @@ export default function ExamScheduler() {
                     onClick={() => setClearOpen(true)}
                     variant="outline"
                     size="sm"
-                    className="w-full mt-2 text-destructive border-destructive"
+                    className="text-destructive border-destructive mt-2 w-full"
                   >
                     Clear All
                   </Button>
-                  <Button
-                    onClick={shareCurrentDay}
-                    size="sm"
-                    className="w-full mt-2"
-                  >
+                  <Button onClick={shareCurrentDay} size="sm" className="mt-2 w-full">
                     Share This Day
                   </Button>
                 </>
@@ -1036,30 +959,28 @@ export default function ExamScheduler() {
           </Card>
         </div>
 
-        <div className="flex-1 p-6 overflow-hidden">
-          <Card className="shadow-lg max-w-3xl mx-auto h-full flex flex-col bg-neutral-200/70 pt-6 overflow-clip pb-0">
-            <CardHeader className="grid grid-cols-[1fr_auto] items-end text-neutral-500 tracking-tighter px-8 pt-2 pb-1 font-bold leading-none">
+        <div className="flex-1 overflow-hidden p-6">
+          <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-6 pb-0 shadow-lg">
+            <CardHeader className="grid grid-cols-[1fr_auto] items-end px-8 pt-2 pb-1 leading-none font-bold tracking-tighter text-neutral-500">
               <div className="text-5xl">{currentDate.getDate()}</div>
               <div className="text-3xl">
-                {currentDate
-                  .toLocaleDateString("en-US", { weekday: "short" })
-                  .toUpperCase()}
+                {currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col">
+            <CardContent className="flex flex-1 flex-col overflow-y-auto p-0">
               <div className="flex-1">
                 {getScheduleDisplay().map((slot, idx) => {
                   if (!slot.task) {
                     return (
                       <div
                         key={`${to12h(slot.time)}-${idx}`}
-                        className="grid grid-cols-[80px_1fr] md:grid-cols-[96px_1fr] border-b border-neutral-200"
+                        className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
                       >
-                        <div className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200 text-xs md:text-sm font-semibold tracking-tighter text-neutral-700 flex items-center whitespace-nowrap tabular-nums">
+                        <div className="flex items-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                           {to12h(slot.time)}
                         </div>
-                        <div className="bg-neutral-50 px-3 md:px-4 py-3 md:py-4 text-sm text-neutral-400 flex items-center">
+                        <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
                           <span className="opacity-50">Available</span>
                         </div>
                       </div>
@@ -1070,29 +991,26 @@ export default function ExamScheduler() {
                   return (
                     <div
                       key={`${slot.task.id}-${idx}`}
-                      className="grid grid-cols-[80px_1fr] md:grid-cols-[96px_1fr] border-b border-neutral-200"
+                      className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
                     >
-                      <div className="bg-orange-100 px-3 md:px-4 py-3 md:py-4 border-r border-neutral-200 text-xs md:text-sm font-semibold tracking-tighter text-neutral-700 flex items-start whitespace-nowrap tabular-nums">
+                      <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                         {to12h(slot.time)}
                       </div>
                       <div
-                        className={`p-4 md:p-6 ${c?.bg} ${c?.text} flex flex-col items-center justify-center text-center gap-1 md:gap-2`}
+                        className={`p-4 md:p-6 ${c?.bg} ${c?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
                         style={{
                           minHeight: `${slot.rowSpan * 60}px`,
                           height: `${slot.rowSpan * 60}px`,
                         }}
                       >
-                        <div className="font-semibold text-lg md:text-xl">
-                          {slot.task.name}
-                        </div>
+                        <div className="text-lg font-semibold md:text-xl">{slot.task.name}</div>
                         {slot.task.description && (
-                          <div className="text-xs md:text-sm text-neutral-700 whitespace-pre-wrap">
+                          <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
                             {slot.task.description}
                           </div>
                         )}
-                        <div className="text-xs md:text-sm text-neutral-600">
-                          {to12h(slot.task.startTime)} –{" "}
-                          {to12h(slot.task.endTime)}
+                        <div className="text-xs text-neutral-600 md:text-sm">
+                          {to12h(slot.task.startTime)} – {to12h(slot.task.endTime)}
                         </div>
                       </div>
                     </div>
@@ -1110,12 +1028,12 @@ export default function ExamScheduler() {
             <AlertDialogTitle>Time conflict detected</AlertDialogTitle>
             <AlertDialogDescription>
               The new item overlaps with the following {conflicts.length} event
-              {conflicts.length > 1 ? "s" : ""}:
-              <ul className="mt-2 list-disc pl-5 space-y-1">
+              {conflicts.length > 1 ? 's' : ''}:
+              <ul className="mt-2 list-disc space-y-1 pl-5">
                 {conflicts.map((c) => (
                   <li key={c.id}>
-                    <span className="font-medium">{c.name}</span> —{" "}
-                    {to12h(c.startTime)}–{to12h(c.endTime)}
+                    <span className="font-medium">{c.name}</span> — {to12h(c.startTime)}–
+                    {to12h(c.endTime)}
                   </li>
                 ))}
               </ul>
@@ -1146,17 +1064,13 @@ export default function ExamScheduler() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit item</DialogTitle>
-            <DialogDescription>
-              Update the name, start time, duration, or color.
-            </DialogDescription>
+            <DialogDescription>Update the name, start time, duration, or color.</DialogDescription>
           </DialogHeader>
           {editItem && (
             <div className="space-y-3">
               <Input
                 value={editItem.name}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, name: e.target.value })
-                }
+                onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
               />
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -1169,10 +1083,7 @@ export default function ExamScheduler() {
                       // live update: DO NOT clamp to day start here (lets the user type freely)
                       const s = timeToMinutes(e.target.value);
                       const endLimit = timeToMinutes(endTime);
-                      const endM = Math.min(
-                        s + Number(editItem.duration || 0),
-                        endLimit
-                      );
+                      const endM = Math.min(s + Number(editItem.duration || 0), endLimit);
                       setEditItem({
                         ...editItem,
                         startTime: minutesToTime(s),
@@ -1186,16 +1097,13 @@ export default function ExamScheduler() {
                       const raw = timeToMinutes(e.target.value);
 
                       if (raw < anchor) {
-                        toast.error("Invalid start time", {
+                        toast.error('Invalid start time', {
                           description: `Start time (${to12h(
                             minutesToTime(raw)
                           )}) is before your day start (${to12h(startTime)}).`,
                         });
                         // revert to day start so input shows a valid value
-                        const endM = Math.min(
-                          anchor + Number(editItem.duration || 0),
-                          endLimit
-                        );
+                        const endM = Math.min(anchor + Number(editItem.duration || 0), endLimit);
                         setEditItem({
                           ...editItem,
                           startTime: minutesToTime(anchor),
@@ -1207,17 +1115,14 @@ export default function ExamScheduler() {
 
                       // otherwise snap to your anchored grid and clamp to bounds
                       const snapped = clamp(
-                        snapToAnchor(raw, interval, anchor, "nearest"),
+                        snapToAnchor(raw, interval, anchor, 'nearest'),
                         anchor,
                         endLimit
                       );
                       if (snapped !== raw) {
-                        announceSnap("Start adjusted", raw, snapped);
+                        announceSnap('Start adjusted', raw, snapped);
                       }
-                      const endM = Math.min(
-                        snapped + Number(editItem.duration || 0),
-                        endLimit
-                      );
+                      const endM = Math.min(snapped + Number(editItem.duration || 0), endLimit);
                       setEditItem({
                         ...editItem,
                         startTime: minutesToTime(snapped),
@@ -1225,7 +1130,7 @@ export default function ExamScheduler() {
                         duration: endM - snapped,
                       });
                     }}
-                    className="[appearance:textfield] pr-3 [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
+                    className="[appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
                   />
                 </div>
                 <div>
@@ -1264,31 +1169,23 @@ export default function ExamScheduler() {
               <div>
                 <label className="text-xs text-neutral-500">Description</label>
                 <Textarea
-                  value={editItem.description ?? ""}
-                  onChange={(e) =>
-                    setEditItem({ ...editItem, description: e.target.value })
-                  }
+                  value={editItem.description ?? ''}
+                  onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
                   placeholder="Optional notes for this item"
                   className="mt-1"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
-                  Palette
-                </label>
+                <label className="mb-2 block text-xs text-neutral-500">Palette</label>
                 <div className="grid grid-cols-4 gap-2">
                   {colors.map((c) => (
                     <button
                       key={c.name}
                       type="button"
-                      onClick={() =>
-                        setEditItem({ ...editItem, color: c.name })
-                      }
+                      onClick={() => setEditItem({ ...editItem, color: c.name })}
                       className={`h-8 rounded-lg ${c.bg} ${
-                        editItem.color === c.name
-                          ? "ring-2 ring-offset-2 ring-neutral-400"
-                          : ""
+                        editItem.color === c.name ? 'ring-2 ring-neutral-400 ring-offset-2' : ''
                       } cursor-pointer`}
                       aria-label={c.name}
                     />
@@ -1320,12 +1217,12 @@ export default function ExamScheduler() {
             <AlertDialogTitle>Time conflict detected</AlertDialogTitle>
             <AlertDialogDescription>
               The changes overlap with {editConflicts.length} event
-              {editConflicts.length > 1 ? "s" : ""}:
-              <ul className="mt-2 list-disc pl-5 space-y-1">
+              {editConflicts.length > 1 ? 's' : ''}:
+              <ul className="mt-2 list-disc space-y-1 pl-5">
                 {editConflicts.map((c) => (
                   <li key={c.id}>
-                    <span className="font-medium">{c.name}</span> —{" "}
-                    {to12h(c.startTime)}–{to12h(c.endTime)}
+                    <span className="font-medium">{c.name}</span> — {to12h(c.startTime)}–
+                    {to12h(c.endTime)}
                   </li>
                 ))}
               </ul>
@@ -1338,8 +1235,8 @@ export default function ExamScheduler() {
                 setEditConflictOpen(false);
                 setEditPending(null);
                 setEditConflicts([]);
-                toast.error("Task failed to modify", {
-                  description: "No changes were applied.",
+                toast.error('Task failed to modify', {
+                  description: 'No changes were applied.',
                 });
               }}
             >
@@ -1351,21 +1248,18 @@ export default function ExamScheduler() {
                 if (!editPending) return;
                 const dateKey = formatDateKey(currentDate);
                 const kept = getCurrentSchedule().filter(
-                  (t) =>
-                    !editConflicts.some((c) => c.id === t.id) &&
-                    t.id !== editPending.id
+                  (t) => !editConflicts.some((c) => c.id === t.id) && t.id !== editPending.id
                 );
                 const updated = [...kept, editPending].sort(
-                  (a, b) =>
-                    timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+                  (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
                 );
                 setSchedules({ ...schedules, [dateKey]: updated });
                 setEditPending(null);
                 setEditConflicts([]);
                 setEditConflictOpen(false);
                 setEditOpen(false);
-                toast.success("Task overridden successfully", {
-                  description: "Conflicting events were replaced.",
+                toast.success('Task overridden successfully', {
+                  description: 'Conflicting events were replaced.',
                 });
               }}
             >
@@ -1380,8 +1274,7 @@ export default function ExamScheduler() {
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all events?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove all items for {dateString}. You can’t undo this
-              action.
+              This will remove all items for {dateString}. You can’t undo this action.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
