@@ -205,8 +205,7 @@ export default async function SharePage({
         </div>
 
         <p className="mt-4 text-xs text-neutral-500">
-          This view is read-only. If the link has expired, ask the sender to
-          create a new one.
+          This view is read-only.
         </p>
       </div>
     </div>
