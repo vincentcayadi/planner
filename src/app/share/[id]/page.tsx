@@ -113,7 +113,7 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
       <div className="mx-auto max-w-5xl px-4 py-10">
         <header className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="mb-2 text-2xl font-bold tracking-tight">
               Shared Day —{' '}
               {date.toLocaleDateString(undefined, {
                 weekday: 'long',
@@ -135,26 +135,26 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
               !row.task ? (
                 <div
                   key={`avail-${row.time}-${i}`}
-                  className="grid [grid-template-columns:96px_1fr]"
+                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
                 >
-                  <div className="border-r border-neutral-200 bg-orange-100 px-4 py-4 text-sm font-semibold tracking-tight text-neutral-700 tabular-nums">
+                  <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                     {to12h(row.time)}
                   </div>
-                  <div className="flex items-center bg-neutral-50 px-4 py-4 text-sm text-neutral-400">
-                    <span className="opacity-60">Available</span>
+                  <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
+                    <span className="opacity-50">Available</span>
                   </div>
                 </div>
               ) : (
                 <div
                   key={`task-${row.task.id}-${i}`}
-                  className="grid [grid-template-columns:96px_1fr]"
+                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
                 >
-                  <div className="border-r border-neutral-200 bg-orange-100 px-4 py-4 text-sm font-semibold tracking-tight text-neutral-700 tabular-nums">
+                  <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                     {to12h(row.time)}
                   </div>
                   <div
                     className={clsx(
-                      'flex items-center justify-center px-6 py-6 text-center',
+                      '${c?.bg} ${c?.text} flex flex-col items-center justify-center gap-1 p-4 text-center md:gap-2 md:p-6',
                       colors.find((x) => x.name === row.task!.color)?.bg
                     )}
                     style={{
@@ -165,18 +165,18 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                     <div>
                       <div
                         className={clsx(
-                          'mb-2 text-xl font-semibold',
+                          'text-lg font-semibold md:text-xl',
                           colors.find((x) => x.name === row.task!.color)?.text
                         )}
                       >
                         {row.task.name}
                       </div>
                       {row.task.description ? (
-                        <div className="mb-1 text-sm whitespace-pre-wrap text-neutral-700">
+                        <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
                           {row.task.description}
                         </div>
                       ) : null}
-                      <div className="text-sm text-neutral-600">
+                      <div className="text-xs text-neutral-600 md:text-sm">
                         {to12h(row.task.startTime)} – {to12h(row.task.endTime)}
                       </div>
                     </div>
