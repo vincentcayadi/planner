@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import type { Task, PlannerExport, DayExport, ColorName } from '@/lib/types';
+import type {
+  Task,
+  PlannerExport,
+  DayExport,
+  ColorName,
+  TaskFormState,
+  ShareResponse,
+} from '@/lib/types';
 import { Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +50,6 @@ import {
   to12h,
   overlaps,
   snapToAnchor,
-  type SnapMode,
 } from '@/lib/utils/time';
 
 const db = new Dexie('plannerDB');
@@ -51,21 +57,28 @@ db.version(1).stores({ days: 'dateKey', meta: 'key' });
 const days = () => db.table('days');
 const meta = () => db.table('meta');
 
-export default function ExamScheduler() {
+const initialForm: TaskFormState = {
+  taskName: '',
+  taskDesc: '',
+  taskStartTime: '08:00',
+  taskDuration: '60',
+  selectedColor: 'blue',
+  nameError: false,
+};
+
+export default function Page() {
   // ---------- state ----------
   const [schedules, setSchedules] = useState<Record<string, Task[]>>({});
-  const [currentDate, setCurrentDate] = React.useState<Date | undefined>(new Date());
+  const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('23:30');
   const [interval, setInterval] = useState(30); // minutes
 
-  // Add task form state
-  const [taskName, setTaskName] = useState('');
-  const [taskDesc, setTaskDesc] = useState('');
-  const [taskStartTime, setTaskStartTime] = useState('08:00');
-  const [taskDuration, setTaskDuration] = useState('60'); // minutes (string for Select)
-  const [selectedColor, setSelectedColor] = useState<ColorName>('blue');
-  const [nameError, setNameError] = useState(false);
+  // Unified task form state
+  const [taskForm, setTaskForm] = useState<TaskFormState>(initialForm);
+  const updateTaskForm = (patch: Partial<TaskFormState>) =>
+    setTaskForm((prev) => ({ ...prev, ...patch }));
+  const resetTaskForm = () => setTaskForm(initialForm);
 
   // Conflict dialog state
   const [conflicts, setConflicts] = useState<Task[]>([]);
@@ -111,7 +124,6 @@ export default function ExamScheduler() {
     };
 
   const w: FSWin | undefined = typeof window !== 'undefined' ? (window as FSWin) : undefined;
-
   const supportsFS = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
   // Generate time slots based on current start/end/interval
@@ -147,7 +159,7 @@ export default function ExamScheduler() {
   };
 
   const shareCurrentDay = async () => {
-    const dateKey = formatDateKey(currentDate!);
+    const dateKey = formatDateKey(currentDate);
 
     const items = getCurrentSchedule().filter((t) => t.duration > 0);
     if (items.length === 0) {
@@ -174,7 +186,7 @@ export default function ExamScheduler() {
       return;
     }
 
-    const data = await res.json();
+    const data: ShareResponse = await res.json();
     const url: string = data.url;
 
     try {
@@ -187,25 +199,25 @@ export default function ExamScheduler() {
 
   // ---------- CRUD ----------
   const addTask = () => {
-    const trimmed = taskName.trim();
+    const trimmed = taskForm.taskName.trim();
     if (!trimmed) {
-      setNameError(true);
+      updateTaskForm({ nameError: true });
       toast.error('Missing title', {
         description: 'Enter a Subject / Paper / Task.',
       });
       return;
     }
-    setNameError(false);
+    updateTaskForm({ nameError: false });
 
     const anchor = timeToMinutes(startTime); // day start = grid anchor
     const endLimit = timeToMinutes(endTime);
-    const rawStart = timeToMinutes(taskStartTime);
+    const rawStart = timeToMinutes(taskForm.taskStartTime);
 
     // must not be before the day's start (free-form day, but tasks can't precede it)
     if (rawStart < anchor) {
       toast.error('Invalid start time', {
         description: `Start time (${to12h(
-          taskStartTime
+          taskForm.taskStartTime
         )}) is before your day start (${to12h(startTime)}).`,
       });
       return;
@@ -220,7 +232,7 @@ export default function ExamScheduler() {
     announceSnap('Task start adjusted', rawStart, snappedStart);
 
     const startM = snappedStart;
-    const durMin = parseInt(taskDuration, 10) || 0;
+    const durMin = parseInt(taskForm.taskDuration, 10) || 0;
     const endM = Math.min(startM + durMin, endLimit);
 
     if (endM <= startM) {
@@ -233,14 +245,14 @@ export default function ExamScheduler() {
     const dateKey = formatDateKey(currentDate);
     const current = [...getCurrentSchedule()];
 
-    const newTask = {
+    const newTask: Task = {
       id: crypto.randomUUID(),
       name: trimmed,
-      description: taskDesc.trim() || '',
+      description: taskForm.taskDesc.trim() || '',
       startTime: minutesToTime(startM),
       endTime: minutesToTime(endM),
       duration: endM - startM,
-      color: selectedColor,
+      color: taskForm.selectedColor,
     };
 
     // conflict detection
@@ -262,8 +274,8 @@ export default function ExamScheduler() {
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
     setSchedules({ ...schedules, [dateKey]: updated });
-    setTaskName('');
-    setTaskDesc('');
+
+    resetTaskForm();
     toast.success('Task added', {
       description: `${newTask.name} — ${to12h(newTask.startTime)} to ${to12h(newTask.endTime)}`,
     });
@@ -280,7 +292,7 @@ export default function ExamScheduler() {
     setPendingTask(null);
     setConflicts([]);
     setDialogOpen(false);
-    setTaskName('');
+    resetTaskForm();
     toast.success('Task overridden successfully');
   };
 
@@ -308,7 +320,7 @@ export default function ExamScheduler() {
       (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
     );
 
-    const breaks = [];
+    const breaks: Task[] = [];
     let cursor = startM;
     current.forEach((t) => {
       const s = timeToMinutes(t.startTime),
@@ -317,6 +329,7 @@ export default function ExamScheduler() {
         breaks.push({
           id: crypto.randomUUID(),
           name: 'Break',
+          description: '',
           startTime: minutesToTime(cursor),
           endTime: minutesToTime(s),
           duration: s - cursor,
@@ -329,6 +342,7 @@ export default function ExamScheduler() {
       breaks.push({
         id: crypto.randomUUID(),
         name: 'Break',
+        description: '',
         startTime: minutesToTime(cursor),
         endTime: minutesToTime(endM),
         duration: endM - cursor,
@@ -345,7 +359,7 @@ export default function ExamScheduler() {
   };
 
   //  Helpers
-  const openEdit = (item) => {
+  const openEdit = (item: Task) => {
     setEditItem(item);
     setEditOpen(true);
   };
@@ -380,11 +394,12 @@ export default function ExamScheduler() {
       return;
     }
 
-    const normalized = {
+    const normalized: Task = {
       ...editItem,
       startTime: minutesToTime(startBound),
       endTime: minutesToTime(endComputed),
       duration: endComputed - startBound,
+      color: editItem.color as ColorName,
     };
 
     // 3) Conflict check against the rest of the items
@@ -411,7 +426,12 @@ export default function ExamScheduler() {
   // Build display rows with proper span
   const getScheduleDisplay = () => {
     const schedule = getCurrentSchedule();
-    const display = [];
+    const display: Array<{
+      time: string;
+      task: Task | null;
+      isTaskStart: boolean;
+      rowSpan: number;
+    }> = [];
     const safeInterval = Math.max(5, Number.isFinite(interval) ? Number(interval) : 30);
     const dayEnd = timeToMinutes(endTime);
 
@@ -449,6 +469,7 @@ export default function ExamScheduler() {
     month: 'short',
     day: 'numeric',
   });
+
   // JSON deserialization
   const serialize = () => ({
     version: 1,
@@ -458,6 +479,7 @@ export default function ExamScheduler() {
     interval,
     schedules,
   });
+
   // Build a payload containing only days that have items (tasks/breaks)
   const buildExportPayload = React.useCallback((): PlannerExport => {
     const days: DayExport[] = Object.entries(schedules)
@@ -492,7 +514,7 @@ export default function ExamScheduler() {
         const writable = await (handle as any).createWritable();
         await writable.write(new Blob([json], { type: 'application/json' }));
         await writable.close();
-        toast.success('Exported', { description: 'All non-empty days saved.' });
+        toast.success('Successfully Exported');
         return;
       }
     } catch {
@@ -505,9 +527,7 @@ export default function ExamScheduler() {
     a.download = `planner-all-${formatDateKey(new Date())}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast.success('Exported', {
-      description: 'Downloaded all non-empty days.',
-    });
+    toast.success('Successfully Downloaded');
   };
 
   const loadFromData = (data: PlannerExport) => {
@@ -576,8 +596,8 @@ export default function ExamScheduler() {
       try {
         const rows = await days().toArray();
         if (rows?.length) {
-          const loaded = {};
-          rows.forEach((r) => {
+          const loaded: Record<string, Task[]> = {};
+          rows.forEach((r: any) => {
             loaded[r.dateKey] = r.items || [];
           });
           setSchedules(loaded);
@@ -710,14 +730,12 @@ export default function ExamScheduler() {
               <div>
                 <Input
                   placeholder="Subject / Paper / Task"
-                  value={taskName}
-                  onChange={(e) => setTaskName(e.target.value)}
-                  aria-invalid={nameError}
-                  className={`${
-                    nameError ? 'border-destructive focus-visible:ring-destructive' : ''
-                  }`}
+                  value={taskForm.taskName}
+                  onChange={(e) => updateTaskForm({ taskName: e.target.value })}
+                  aria-invalid={taskForm.nameError}
+                  className={`${taskForm.nameError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {nameError && (
+                {taskForm.nameError && (
                   <p className="text-destructive mt-1 text-xs">This field is required.</p>
                 )}
               </div>
@@ -726,8 +744,8 @@ export default function ExamScheduler() {
                   <label className="text-xs text-neutral-500">Start</label>
                   <Input
                     type="time"
-                    value={taskStartTime}
-                    onChange={(e) => setTaskStartTime(e.target.value)}
+                    value={taskForm.taskStartTime}
+                    onChange={(e) => updateTaskForm({ taskStartTime: e.target.value })}
                     onBlur={(e) => {
                       const anchor = timeToMinutes(startTime); // day start (grid anchor)
                       const endLimit = timeToMinutes(endTime);
@@ -747,7 +765,7 @@ export default function ExamScheduler() {
                             startTime
                           )}). Auto-corrected to ${to12h(minutesToTime(snapped))}.`,
                         });
-                        setTaskStartTime(minutesToTime(snapped));
+                        updateTaskForm({ taskStartTime: minutesToTime(snapped) });
                         return;
                       }
 
@@ -760,7 +778,7 @@ export default function ExamScheduler() {
 
                       if (snapped !== raw) {
                         announceSnap('Task start adjusted', raw, snapped);
-                        setTaskStartTime(minutesToTime(snapped));
+                        updateTaskForm({ taskStartTime: minutesToTime(snapped) });
                       }
                     }}
                     className="[appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
@@ -768,7 +786,10 @@ export default function ExamScheduler() {
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">Duration</label>
-                  <Select value={String(taskDuration)} onValueChange={(v) => setTaskDuration(v)}>
+                  <Select
+                    value={String(taskForm.taskDuration)}
+                    onValueChange={(v) => updateTaskForm({ taskDuration: v })}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Duration" />
                     </SelectTrigger>
@@ -785,8 +806,8 @@ export default function ExamScheduler() {
               <div>
                 <label className="text-xs text-neutral-500">Description</label>
                 <Textarea
-                  value={taskDesc}
-                  onChange={(e) => setTaskDesc(e.target.value)}
+                  value={taskForm.taskDesc}
+                  onChange={(e) => updateTaskForm({ taskDesc: e.target.value })}
                   placeholder="Optional notes for this item"
                   className="mt-1"
                   rows={3}
@@ -799,9 +820,11 @@ export default function ExamScheduler() {
                     <button
                       key={c.name}
                       type="button"
-                      onClick={() => setSelectedColor(c.name)}
+                      onClick={() => updateTaskForm({ selectedColor: c.name as ColorName })}
                       className={`h-8 rounded-lg ${c.bg} ${
-                        selectedColor === c.name ? 'ring-2 ring-neutral-400 ring-offset-2' : ''
+                        taskForm.selectedColor === c.name
+                          ? 'ring-2 ring-neutral-400 ring-offset-2'
+                          : ''
                       } cursor-pointer`}
                       aria-label={c.name}
                     />
@@ -1050,9 +1073,8 @@ export default function ExamScheduler() {
                         anchor,
                         endLimit
                       );
-                      if (snapped !== raw) {
-                        announceSnap('Start adjusted', raw, snapped);
-                      }
+                      if (snapped !== raw) announceSnap('Start adjusted', raw, snapped);
+
                       const endM = Math.min(snapped + Number(editItem.duration || 0), endLimit);
                       setEditItem({
                         ...editItem,
@@ -1114,7 +1136,7 @@ export default function ExamScheduler() {
                     <button
                       key={c.name}
                       type="button"
-                      onClick={() => setEditItem({ ...editItem, color: c.name })}
+                      onClick={() => setEditItem({ ...editItem, color: c.name as ColorName })}
                       className={`h-8 rounded-lg ${c.bg} ${
                         editItem.color === c.name ? 'ring-2 ring-neutral-400 ring-offset-2' : ''
                       } cursor-pointer`}

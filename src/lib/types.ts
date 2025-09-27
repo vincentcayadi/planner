@@ -1,20 +1,5 @@
-export type Task = {
-  id: string; // use uuid for stability across imports
-  name: string;
-  description?: string;
-  startTime: string; // "HH:MM"
-  endTime: string; // "HH:MM"
-  duration: number; // minutes
-  color: ColorName;
-};
-
-export type DayExport = { dateKey: string; items: Task[] };
-
-export type PlannerExport = {
-  exportedAt: string;
-  planner: { startTime: string; endTime: string; interval: number };
-  days: DayExport[];
-};
+/** "HH:MM" 24-hour time string (e.g., "08:00", "23:30"). */
+export type TimeHHMM = string;
 
 export type ColorName =
   | 'blue'
@@ -25,3 +10,58 @@ export type ColorName =
   | 'orange'
   | 'cyan'
   | 'neutral';
+
+export type Task = {
+  id: string; 
+  name: string;
+  description?: string;
+  startTime: TimeHHMM; 
+  endTime: TimeHHMM; 
+  duration: number; 
+  color: ColorName;
+};
+
+export type DayExport = { dateKey: string; items: Task[] };
+
+export type PlannerConfig = {
+  startTime: TimeHHMM;
+  endTime: TimeHHMM;
+  interval: number; 
+};
+
+export type PlannerExport = {
+  exportedAt: string; 
+  planner: PlannerConfig;
+  days: DayExport[];
+};
+
+export type PendingTask = {
+  task: Task;
+  dateKey: string;
+};
+
+export type ScheduleDisplayRow = {
+  time: TimeHHMM;
+  task: Task | null;
+  isTaskStart: boolean;
+  rowSpan: number;
+};
+
+export type TaskFormState = {
+  taskName: string;
+  taskDesc: string;
+  taskStartTime: TimeHHMM;
+  taskDuration: string;
+  selectedColor: ColorName;
+  nameError: boolean;
+};
+
+export type ShareRequest = {
+  dateKey: string;
+  items: Task[];
+  planner: PlannerConfig;
+};
+
+export type ShareResponse = {
+  url: string;
+};
