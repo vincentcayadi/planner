@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import type { Task, PlannerExport, DayExport, ColorName } from '@/lib/types';
+import { Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,24 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Dexie from 'dexie';
-
-type Task = {
-  id: number;
-  name: string;
-  description?: string;
-  startTime: string; // "HH:MM"
-  endTime: string; // "HH:MM"
-  duration: number; // minutes
-  color: string;
-};
-
-type DayExport = { dateKey: string; items: Task[] };
-
-type PlannerExport = {
-  exportedAt: string;
-  planner: { startTime: string; endTime: string; interval: number };
-  days: DayExport[]; // only non-empty days
-};
+import { COLORS } from '@/lib/colorConstants';
 
 const db = new Dexie('plannerDB');
 db.version(1).stores({ days: 'dateKey', meta: 'key' });
@@ -71,7 +55,7 @@ export default function ExamScheduler() {
   const [taskDesc, setTaskDesc] = useState('');
   const [taskStartTime, setTaskStartTime] = useState('08:00');
   const [taskDuration, setTaskDuration] = useState('60'); // minutes (string for Select)
-  const [selectedColor, setSelectedColor] = useState('blue');
+  const [selectedColor, setSelectedColor] = useState<ColorName>('blue');
   const [nameError, setNameError] = useState(false);
 
   // Conflict dialog state
@@ -92,17 +76,6 @@ export default function ExamScheduler() {
   const [editConflicts, setEditConflicts] = useState<Task[]>([]);
   const [editPending, setEditPending] = useState<Task | null>(null);
   const [editConflictOpen, setEditConflictOpen] = useState(false);
-
-  const colors = [
-    { name: 'blue', bg: 'bg-blue-200', text: 'text-blue-800' },
-    { name: 'green', bg: 'bg-green-200', text: 'text-green-800' },
-    { name: 'yellow', bg: 'bg-yellow-200', text: 'text-yellow-800' },
-    { name: 'purple', bg: 'bg-purple-200', text: 'text-purple-800' },
-    { name: 'pink', bg: 'bg-pink-200', text: 'text-pink-800' },
-    { name: 'orange', bg: 'bg-orange-200', text: 'text-orange-800' },
-    { name: 'cyan', bg: 'bg-cyan-200', text: 'text-cyan-800' },
-    { name: 'neutral', bg: 'bg-neutral-200', text: 'text-neutral-800' },
-  ];
 
   // ---------- helpers ----------
   // tiny debounce util so we don't write on every keystroke
@@ -303,7 +276,7 @@ export default function ExamScheduler() {
     const current = [...getCurrentSchedule()];
 
     const newTask = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       name: trimmed,
       description: taskDesc.trim() || '',
       startTime: minutesToTime(startM),
@@ -353,7 +326,7 @@ export default function ExamScheduler() {
     toast.success('Task overridden successfully');
   };
 
-  const removeTask = (id: number) => {
+  const removeTask = (id: string) => {
     const dateKey = formatDateKey(currentDate);
     const filtered = getCurrentSchedule().filter((t) => t.id !== id);
     setSchedules({ ...schedules, [dateKey]: filtered });
@@ -384,7 +357,7 @@ export default function ExamScheduler() {
         e = timeToMinutes(t.endTime);
       if (s > cursor) {
         breaks.push({
-          id: Date.now() + Math.random(),
+          id: crypto.randomUUID(),
           name: 'Break',
           startTime: minutesToTime(cursor),
           endTime: minutesToTime(s),
@@ -396,7 +369,7 @@ export default function ExamScheduler() {
     });
     if (cursor < endM)
       breaks.push({
-        id: Date.now() + Math.random(),
+        id: crypto.randomUUID(),
         name: 'Break',
         startTime: minutesToTime(cursor),
         endTime: minutesToTime(endM),
@@ -864,7 +837,7 @@ export default function ExamScheduler() {
               <div>
                 <label className="mb-2 block text-xs text-neutral-500">Palette</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {colors.map((c) => (
+                  {COLORS.map((c) => (
                     <button
                       key={c.name}
                       type="button"
@@ -891,7 +864,7 @@ export default function ExamScheduler() {
             </CardHeader>
             <CardContent className="space-y-2 pt-0">
               {currentSchedule.map((task) => {
-                const c = colors.find((x) => x.name === task.color);
+                const c = COLORS.find((x) => x.name === task.color);
                 return (
                   <div
                     key={task.id}
@@ -987,7 +960,7 @@ export default function ExamScheduler() {
                     );
                   }
 
-                  const c = colors.find((x) => x.name === slot.task.color);
+                  const c = COLORS.find((x) => x.name === slot.task.color);
                   return (
                     <div
                       key={`${slot.task.id}-${idx}`}
@@ -1179,7 +1152,7 @@ export default function ExamScheduler() {
               <div>
                 <label className="mb-2 block text-xs text-neutral-500">Palette</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {colors.map((c) => (
+                  {COLORS.map((c) => (
                     <button
                       key={c.name}
                       type="button"
