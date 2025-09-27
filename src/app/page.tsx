@@ -36,6 +36,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Dexie from 'dexie';
 import { COLORS } from '@/lib/colorConstants';
+import {
+  formatDateKey,
+  timeToMinutes,
+  minutesToTime,
+  to12h,
+  overlaps,
+  snapToAnchor,
+  type SnapMode,
+} from '@/lib/utils/time';
 
 const db = new Dexie('plannerDB');
 db.version(1).stores({ days: 'dateKey', meta: 'key' });
@@ -105,36 +114,6 @@ export default function ExamScheduler() {
 
   const supportsFS = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
-  const formatDateKey = (d: Date): string => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  const timeToMinutes = (t: string): number => {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
-  };
-
-  const minutesToTime = (mins: number): string => {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  };
-
-  // display helper: 24h -> 12h with AM/PM
-  const to12h = (t: string): string => {
-    if (!t) return '';
-    const [H, M] = t.split(':').map(Number);
-    const ampm = H >= 12 ? 'PM' : 'AM';
-    const h12 = H % 12 || 12;
-    return `${h12}:${String(M).padStart(2, '0')} ${ampm}`;
-  };
-
-  const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number): boolean =>
-    aStart < bEnd && bStart < aEnd;
-
   // Generate time slots based on current start/end/interval
   const timeSlots = useMemo<string[]>(() => {
     const out: string[] = [];
@@ -157,22 +136,7 @@ export default function ExamScheduler() {
 
   const getCurrentSchedule = () => schedules[formatDateKey(currentDate)] || [];
 
-  type SnapMode = 'nearest' | 'floor' | 'ceil';
-
   const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
-
-  /** Snap minutes to a step *anchored* at `anchorMin` (your day start). */
-  const snapToAnchor = (
-    mins: number,
-    step: number,
-    anchorMin: number,
-    mode: SnapMode = 'nearest'
-  ) => {
-    const rel = (mins - anchorMin) / step;
-    const q =
-      mode === 'floor' ? Math.floor(rel) : mode === 'ceil' ? Math.ceil(rel) : Math.round(rel);
-    return anchorMin + q * step;
-  };
 
   const announceSnap = (label: string, fromMin: number, toMin: number) => {
     if (fromMin !== toMin) {
@@ -183,13 +147,7 @@ export default function ExamScheduler() {
   };
 
   const shareCurrentDay = async () => {
-    const dateKey = (() => {
-      const d = currentDate!;
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    })();
+    const dateKey = formatDateKey(currentDate!);
 
     const items = getCurrentSchedule().filter((t) => t.duration > 0);
     if (items.length === 0) {
