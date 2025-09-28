@@ -44,6 +44,9 @@ interface PlannerState {
   isLoading: boolean;
   isSaving: boolean;
 
+  // Share tracking
+  sharedLinks: Record<string, { url: string; createdAt: string; id: string }>;
+
   // Actions
   setCurrentDate: (date: Date) => void;
   updatePlannerConfig: (config: Partial<PlannerConfig>) => void;
@@ -80,6 +83,11 @@ interface PlannerState {
   saveToStorage: () => Promise<void>;
   exportData: () => PlannerExport;
   importData: (data: PlannerExport) => Promise<{ success: boolean; error?: string }>;
+
+  // Share management
+  setSharedLink: (dateKey: string, url: string, id: string) => void;
+  getSharedLink: (dateKey: string) => { url: string; createdAt: string; id: string } | null;
+  removeSharedLink: (dateKey: string) => void;
 }
 
 const initialTaskForm: TaskFormState = {
@@ -105,6 +113,7 @@ export const usePlannerStore = create<PlannerState>()(
       currentDate: new Date(),
       plannerConfig: initialPlannerConfig,
       taskForm: { ...initialTaskForm, taskStartTime: initialPlannerConfig.startTime },
+      sharedLinks: {},
 
       conflictDialog: {
         isOpen: false,
@@ -647,6 +656,28 @@ export const usePlannerStore = create<PlannerState>()(
           return { success: false, error: 'Failed to import data' };
         }
       },
+
+      // Share management
+      setSharedLink: (dateKey: string, url: string, id: string) => {
+        set((state) => {
+          state.sharedLinks[dateKey] = {
+            url,
+            id,
+            createdAt: new Date().toISOString(),
+          };
+        });
+      },
+
+      getSharedLink: (dateKey: string) => {
+        const { sharedLinks } = get();
+        return sharedLinks[dateKey] || null;
+      },
+
+      removeSharedLink: (dateKey: string) => {
+        set((state) => {
+          delete state.sharedLinks[dateKey];
+        });
+      },
     })),
     {
       name: 'planner-storage',
@@ -654,6 +685,7 @@ export const usePlannerStore = create<PlannerState>()(
       partialize: (state) => ({
         schedules: state.schedules,
         plannerConfig: state.plannerConfig,
+        sharedLinks: state.sharedLinks,
       }),
     }
   )

@@ -1,21 +1,41 @@
 // src/components/TaskList/TaskList.tsx
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil, Share2, Copy, RefreshCw, ExternalLink } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { to12h } from '@/lib/utils/time';
+import { to12h, formatDateKey } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function TaskList() {
-  const { getCurrentSchedule, removeTask, openEditDialog, autoFillBreaks, openClearAllDialog } =
-    usePlannerStore();
+  const {
+    getCurrentSchedule,
+    removeTask,
+    openEditDialog,
+    autoFillBreaks,
+    openClearAllDialog,
+    setSharedLink,
+    getSharedLink,
+    removeSharedLink,
+    currentDate
+  } = usePlannerStore();
+
+  const [isSharing, setIsSharing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const currentSchedule = getCurrentSchedule();
+  const currentDateKey = formatDateKey(currentDate);
+  const existingShare = getSharedLink(currentDateKey);
+
+  // Check if existing share might be expired
+  const isLikelyExpired = existingShare ?
+    Date.now() > (new Date(existingShare.createdAt).getTime() + (25 * 60 * 60 * 1000)) :
+    false;
 
   const handleRemoveTask = (id: string, name: string) => {
     removeTask(id);
@@ -24,7 +44,7 @@ export function TaskList() {
     });
   };
 
-  const handleShareCurrentDay = async () => {
+  const handleShareCurrentDay = async (forceRefresh = false) => {
     const items = currentSchedule.filter((t) => t.duration > 0);
 
     if (items.length === 0) {
@@ -34,17 +54,22 @@ export function TaskList() {
       return;
     }
 
-    // Get planner config from store
-    const { plannerConfig, currentDate } = usePlannerStore.getState();
-    const dateKey = currentDate.toISOString().split('T')[0];
-
-    const payload = {
-      dateKey,
-      items,
-      planner: plannerConfig,
-    };
+    if (forceRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsSharing(true);
+    }
 
     try {
+      // Get planner config from store
+      const { plannerConfig } = usePlannerStore.getState();
+
+      const payload = {
+        dateKey: currentDateKey,
+        items,
+        planner: plannerConfig,
+      };
+
       const res = await fetch('/api/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,15 +82,72 @@ export function TaskList() {
 
       const data = await res.json();
       const url: string = data.url;
+      const id: string = data.id;
+
+      // Store the share link
+      setSharedLink(currentDateKey, url, id);
 
       try {
         await navigator.clipboard.writeText(url);
-        toast.success('Share link copied', { description: url });
+        toast.success(forceRefresh ? 'Link refreshed and copied!' : 'Share link copied!', {
+          description: url,
+          action: {
+            label: 'Open',
+            onClick: () => window.open(url, '_blank'),
+          },
+        });
       } catch {
-        toast.success('Share link ready', { description: url });
+        toast.success(forceRefresh ? 'Link refreshed!' : 'Share link ready!', {
+          description: url,
+          action: {
+            label: 'Open',
+            onClick: () => window.open(url, '_blank'),
+          },
+        });
       }
-    } catch {
+    } catch (error) {
       toast.error('Share failed', { description: 'Please try again.' });
+    } finally {
+      setIsSharing(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleCopyExistingLink = async () => {
+    if (!existingShare) return;
+
+    // Check if link might be expired (24 hours + 1 hour buffer)
+    const expiryTime = new Date(existingShare.createdAt).getTime() + (25 * 60 * 60 * 1000);
+    const isLikelyExpired = Date.now() > expiryTime;
+
+    if (isLikelyExpired) {
+      toast.warning('Link may have expired', {
+        description: 'This link is over 24 hours old. Consider refreshing it.',
+        action: {
+          label: 'Refresh',
+          onClick: () => handleShareCurrentDay(true),
+        },
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(existingShare.url);
+      toast.success('Link copied!', {
+        description: existingShare.url,
+        action: {
+          label: 'Open',
+          onClick: () => window.open(existingShare.url, '_blank'),
+        },
+      });
+    } catch {
+      toast.success('Link ready!', {
+        description: existingShare.url,
+        action: {
+          label: 'Open',
+          onClick: () => window.open(existingShare.url, '_blank'),
+        },
+      });
     }
   };
 
@@ -171,15 +253,87 @@ export function TaskList() {
                 Fill Breaks
               </Button>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={handleShareCurrentDay}
-                size="sm"
-                className="w-full transition-all duration-200 hover:shadow-md"
-              >
-                Share This Day
-              </Button>
-            </motion.div>
+            {!existingShare ? (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  onClick={() => handleShareCurrentDay(false)}
+                  disabled={isSharing}
+                  size="sm"
+                  className="w-full transition-all duration-200 hover:shadow-md"
+                >
+                  {isSharing ? (
+                    <div className="flex items-center justify-center">
+                      <LoadingSpinner size="sm" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4" />
+                      <span>Share This Day</span>
+                    </div>
+                  )}
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="space-y-2">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleCopyExistingLink}
+                    variant="outline"
+                    size="sm"
+                    className="w-full transition-all duration-200 hover:shadow-md hover:bg-blue-50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Copy className="h-4 w-4" />
+                      <span>Copy Link</span>
+                    </div>
+                  </Button>
+                </motion.div>
+                <div className="grid grid-cols-2 gap-2">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={() => handleShareCurrentDay(true)}
+                      disabled={isRefreshing}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs transition-all duration-200 hover:shadow-md"
+                    >
+                      {isRefreshing ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                          <RefreshCw className="h-3 w-3" />
+                        </motion.div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <RefreshCw className="h-3 w-3" />
+                          <span>Refresh</span>
+                        </div>
+                      )}
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={() => window.open(existingShare.url, '_blank')}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs transition-all duration-200 hover:shadow-md hover:bg-green-50"
+                    >
+                      <div className="flex items-center gap-1">
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Open</span>
+                      </div>
+                    </Button>
+                  </motion.div>
+                </div>
+                <p className={`text-xs text-center ${isLikelyExpired ? 'text-orange-600' : 'text-neutral-500'}`}>
+                  {isLikelyExpired ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <span>⚠️ Link expired</span>
+                    </span>
+                  ) : (
+                    `Shared ${new Date(existingShare.createdAt).toLocaleDateString()}`
+                  )}
+                </p>
+              </div>
+            )}
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={openClearAllDialog}
