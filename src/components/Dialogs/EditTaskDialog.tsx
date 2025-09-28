@@ -27,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName, Task } from '@/lib/types';
 
