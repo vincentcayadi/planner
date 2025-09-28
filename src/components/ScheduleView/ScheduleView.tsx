@@ -19,6 +19,14 @@ interface ScheduleDisplayRow {
 
 export function ScheduleView() {
   const { currentDate, plannerConfig, schedules, updateTaskForm } = usePlannerStore();
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleQuickAdd = (time: string) => {
     updateTaskForm({ taskStartTime: time });
@@ -115,7 +123,7 @@ export function ScheduleView() {
                   <motion.div
                     key={`${to12h(slot.time)}-${idx}`}
                     whileHover={{ backgroundColor: 'rgba(99, 102, 241, 0.05)' }}
-                    whileTap={{ scale: 0.98, backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
+                    whileTap={isMobile ? undefined : { backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
                     onClick={() => handleQuickAdd(slot.time)}
                     className="group grid cursor-pointer touch-manipulation grid-cols-[70px_1fr] border-b border-neutral-200 transition-colors sm:grid-cols-[90px_1fr] md:grid-cols-[110px_1fr]"
                   >
@@ -127,8 +135,8 @@ export function ScheduleView() {
                         Available
                       </span>
                       <motion.div
-                        initial={{ opacity: 0, scale: 1 }}
-                        whileHover={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        whileHover={{ opacity: 1 }}
                         className="flex items-center gap-1 text-neutral-600 opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         <Plus className="h-3 w-3" />
@@ -159,26 +167,21 @@ export function ScheduleView() {
                   </div>
                   <motion.div
                     whileHover={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
-                    whileTap={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
-                    className={`p-2 sm:p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2`}
+                    whileTap={isMobile ? undefined : { backgroundColor: colorConfig?.bg.replace('200', '300') }}
+                    className={`${slot.rowSpan === 1 ? 'p-1 sm:p-2 md:py-6 md:px-3' : 'p-2 sm:p-4 md:py-8 md:px-6'} ${colorConfig?.bg} ${colorConfig?.text} flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2`}
                     style={{
                       minHeight: `${Math.max(slot.rowSpan * 44, 44)}px`,
-                      height: `${Math.max(slot.rowSpan * 44, 44)}px`,
                     }}
                   >
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="text-sm font-semibold sm:text-lg md:text-xl"
-                    >
+                    <div className={`font-semibold ${slot.rowSpan === 1 ? 'text-xs sm:text-sm md:text-base' : 'text-sm sm:text-lg md:text-xl'}`}>
                       {slot.task.name}
-                    </motion.div>
-                    {slot.task.description && (
+                    </div>
+                    {slot.task.description && slot.rowSpan > 1 && (
                       <div className="line-clamp-2 text-xs whitespace-pre-wrap text-neutral-700 sm:line-clamp-none md:text-sm">
                         {slot.task.description}
                       </div>
                     )}
-                    <div className="text-xs text-neutral-600 sm:text-sm md:text-sm">
+                    <div className={`text-neutral-600 ${slot.rowSpan === 1 ? 'text-xs' : 'text-xs sm:text-sm md:text-sm'}`}>
                       {to12h(slot.task.startTime)} – {to12h(slot.task.endTime)}
                     </div>
                   </motion.div>

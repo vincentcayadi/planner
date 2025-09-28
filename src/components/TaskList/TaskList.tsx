@@ -1,7 +1,7 @@
 // src/components/TaskList/TaskList.tsx
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Pencil, Share2, Copy, RefreshCw, ExternalLink } from 'lucide-react';
@@ -36,6 +36,45 @@ export function TaskList() {
   const isLikelyExpired = existingShare ?
     Date.now() > (new Date(existingShare.createdAt).getTime() + (25 * 60 * 60 * 1000)) :
     false;
+
+  // Check if schedule has changed since last share
+  const [hasScheduleChanged, setHasScheduleChanged] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure client-side only execution to prevent hydration errors
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !existingShare) {
+      setHasScheduleChanged(false);
+      return;
+    }
+
+    // Get the current schedule items (filtered like we do when sharing)
+    const currentItems = currentSchedule.filter((t) => t.duration > 0);
+    const scheduleString = JSON.stringify(currentItems.map(item => ({
+      name: item.name,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      duration: item.duration
+    })));
+
+    // Store the schedule hash in localStorage for comparison
+    const storageKey = `schedule-hash-${currentDateKey}-${existingShare.id}`;
+    const storedHash = localStorage.getItem(storageKey);
+    const currentHash = btoa(scheduleString); // Simple base64 encoding as hash
+
+    if (!storedHash) {
+      // First time checking, store current hash
+      localStorage.setItem(storageKey, currentHash);
+      setHasScheduleChanged(false);
+      return;
+    }
+
+    setHasScheduleChanged(storedHash !== currentHash);
+  }, [isClient, currentSchedule, existingShare, currentDateKey]);
 
   const handleRemoveTask = (id: string, name: string) => {
     removeTask(id);
@@ -86,6 +125,21 @@ export function TaskList() {
 
       // Store the share link
       setSharedLink(currentDateKey, url, id);
+
+      // Update the stored hash to reflect current state (client-side only)
+      if (typeof window !== 'undefined') {
+        const currentItems = items;
+        const scheduleString = JSON.stringify(currentItems.map(item => ({
+          name: item.name,
+          startTime: item.startTime,
+          endTime: item.endTime,
+          duration: item.duration
+        })));
+        const currentHash = btoa(scheduleString);
+        const storageKey = `schedule-hash-${currentDateKey}-${id}`;
+        localStorage.setItem(storageKey, currentHash);
+        setHasScheduleChanged(false); // Reset the change indicator
+      }
 
       try {
         await navigator.clipboard.writeText(url);
@@ -275,7 +329,11 @@ export function TaskList() {
                       disabled={isRefreshing}
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs transition-all duration-200 hover:shadow-md"
+                      className={`w-full text-xs transition-all duration-200 hover:shadow-md ${
+                        hasScheduleChanged
+                          ? 'bg-green-100 border-green-400 text-green-700 hover:bg-green-200 hover:border-green-500'
+                          : ''
+                      }`}
                     >
                       {isRefreshing ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
@@ -284,7 +342,7 @@ export function TaskList() {
                       ) : (
                         <div className="flex items-center gap-1">
                           <RefreshCw className="h-3 w-3" />
-                          <span>Refresh</span>
+                          <span>{hasScheduleChanged ? 'Update' : 'Refresh'}</span>
                         </div>
                       )}
                     </Button>
