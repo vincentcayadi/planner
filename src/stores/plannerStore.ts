@@ -561,7 +561,7 @@ export const usePlannerStore = create<PlannerState>()(
             // Load schedules
             if (scheduleRows?.length) {
               const loadedSchedules: Record<string, Task[]> = {};
-              scheduleRows.forEach((row: any) => {
+              scheduleRows.forEach((row: { dateKey: string; items?: Task[] }) => {
                 loadedSchedules[row.dateKey] = row.items || [];
               });
               state.schedules = loadedSchedules;

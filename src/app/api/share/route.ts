@@ -8,6 +8,7 @@ import {
   validateRequestSize,
   validateContentType,
   shareRateLimit,
+  getClientIP,
   CSP_HEADERS,
 } from '@/lib/security';
 import type { ShareResponse } from '@/lib/types';
@@ -46,10 +47,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    // Rate limiting
-    const clientIP =
-      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'anonymous';
-
+    // Rate limiting with secure IP extraction
+    const clientIP = getClientIP(req);
     const rateLimitResult = shareRateLimit.check(clientIP);
 
     // Set rate limit headers
@@ -89,7 +88,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const storeData = {
       ...validation.data,
       createdAt: new Date().toISOString(),
-      createdBy: clientIP, // Store hashed in production
+      createdBy: clientIP, // Securely extracted IP
       version: 1,
     };
 

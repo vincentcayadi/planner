@@ -40,7 +40,7 @@ export default function PlannerPage() {
   }, []);
 
   // Handle touch gestures for sidebar
-  const handleSidebarDrag = (event: any, info: any) => {
+  const handleSidebarDrag = (event: MouseEvent | TouchEvent, info: { offset: { x: number; y: number } }) => {
     // Close sidebar if dragged left significantly
     if (info.offset.x < -100) {
       setIsSidebarOpen(false);
@@ -48,9 +48,9 @@ export default function PlannerPage() {
   };
 
   // Handle swipe gesture to open sidebar from main content
-  const handleMainContentDrag = (event: any, info: any) => {
+  const handleMainContentDrag = (event: MouseEvent | TouchEvent, info: { offset: { x: number; y: number } }) => {
     // Open sidebar if swiped right from left edge
-    if (info.offset.x > 100 && event.clientX < 50) {
+    if (info.offset.x > 100 && 'clientX' in event && event.clientX < 50) {
       setIsSidebarOpen(true);
     }
   };

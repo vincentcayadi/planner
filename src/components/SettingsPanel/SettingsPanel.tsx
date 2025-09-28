@@ -22,10 +22,29 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload } from 'lucide-react';
 
 // File System Access API types
+interface FilePickerOptions {
+  types?: Array<{
+    description: string;
+    accept: Record<string, string[]>;
+  }>;
+  excludeAcceptAllOption?: boolean;
+  suggestedName?: string;
+}
+
+interface FileSystemFileHandle {
+  createWritable(): Promise<FileSystemWritableFileStream>;
+  getFile(): Promise<File>;
+}
+
+interface FileSystemWritableFileStream {
+  write(data: any): Promise<void>;
+  close(): Promise<void>;
+}
+
 type FSWin = Window &
   typeof globalThis & {
-    showSaveFilePicker?: (opts?: any) => Promise<any>;
-    showOpenFilePicker?: (opts?: any) => Promise<any>;
+    showSaveFilePicker?: (opts?: FilePickerOptions) => Promise<FileSystemFileHandle>;
+    showOpenFilePicker?: (opts?: FilePickerOptions) => Promise<FileSystemFileHandle[]>;
   };
 
 export function SettingsPanel() {
@@ -60,7 +79,7 @@ export function SettingsPanel() {
           ],
         });
 
-        const writable = await (handle as any).createWritable();
+        const writable = await handle.createWritable();
         await writable.write(new Blob([json], { type: 'application/json' }));
         await writable.close();
 
@@ -110,7 +129,7 @@ export function SettingsPanel() {
             ],
           });
 
-          const file = await (handle as any).getFile();
+          const file = await handle.getFile();
           const text = await file.text();
           const data = JSON.parse(text) as PlannerExport;
 
