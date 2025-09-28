@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -45,11 +46,63 @@ export function TimeSelectionInput({
   onStartTimeBlur,
   onEndTimeBlur,
 }: TimeSelectionInputProps) {
-  // Generate duration options based on interval
+  // Generate duration options based on interval (30min to 4h + "More...")
   const durationOptions = useMemo(() => {
     const safeInterval = Math.max(5, plannerConfig.interval || 30);
-    return Array.from({ length: 12 }, (_, i) => (i + 1) * safeInterval);
+    const maxRegularHours = 4;
+    const maxRegularOptions = (maxRegularHours * 60) / safeInterval;
+    return Array.from({ length: maxRegularOptions }, (_, i) => (i + 1) * safeInterval);
   }, [plannerConfig.interval]);
+
+  // Check if current duration needs custom input
+  const needsCustomInput = duration > Math.max(...durationOptions);
+  const [showCustomInput, setShowCustomInput] = useState(needsCustomInput);
+  const [customDuration, setCustomDuration] = useState(duration.toString());
+
+  // Update custom input when duration changes externally
+  useEffect(() => {
+    if (needsCustomInput && !showCustomInput) {
+      setShowCustomInput(true);
+    }
+    setCustomDuration(duration.toString());
+  }, [duration, needsCustomInput, showCustomInput]);
+
+  const handleDurationSelectChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomInput(true);
+      // Keep current duration or set to minimum if too small
+      const safeDuration = Math.max(duration, plannerConfig.interval);
+      setCustomDuration(safeDuration.toString());
+      onDurationChange(safeDuration);
+    } else {
+      setShowCustomInput(false);
+      onDurationChange(Number(value));
+    }
+  };
+
+  const handleCustomDurationChange = (value: string) => {
+    setCustomDuration(value);
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      // Snap to nearest interval
+      const snapped = Math.round(numValue / plannerConfig.interval) * plannerConfig.interval;
+      const clampedDuration = Math.max(plannerConfig.interval, Math.min(snapped, 1440)); // Max 24 hours
+
+      if (snapped !== numValue && numValue > 0) {
+        toast.info('Duration adjusted', {
+          description: `${numValue}min → ${clampedDuration}min (snapped to ${plannerConfig.interval}min intervals)`,
+        });
+        setCustomDuration(clampedDuration.toString());
+      }
+
+      onDurationChange(clampedDuration);
+    }
+  };
+
+  const getCurrentSelectValue = (): string => {
+    if (showCustomInput) return 'custom';
+    return durationOptions.includes(duration) ? String(duration) : 'custom';
+  };
 
   const handleStartTimeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
@@ -165,21 +218,46 @@ export function TimeSelectionInput({
         {useDurationMode ? (
           <div>
             <Label className="text-xs text-neutral-500">Duration</Label>
-            <Select
-              value={String(duration)}
-              onValueChange={(v) => onDurationChange(Number(v))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Duration" />
-              </SelectTrigger>
-              <SelectContent>
-                {durationOptions.map((d) => (
-                  <SelectItem key={d} value={String(d)}>
-                    {d >= 60 ? `${d / 60}h` : `${d}min`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {showCustomInput ? (
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  value={customDuration}
+                  onChange={(e) => handleCustomDurationChange(e.target.value)}
+                  placeholder="Minutes"
+                  min={plannerConfig.interval}
+                  max={1440}
+                  step={plannerConfig.interval}
+                  className="text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCustomInput(false)}
+                  className="h-6 px-2 text-xs text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100"
+                >
+                  ← Back to presets
+                </Button>
+              </div>
+            ) : (
+              <Select
+                value={getCurrentSelectValue()}
+                onValueChange={handleDurationSelectChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {durationOptions.map((d) => (
+                    <SelectItem key={d} value={String(d)}>
+                      {d >= 60 ? `${d / 60}h` : `${d}min`}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">More...</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         ) : (
           <div>
