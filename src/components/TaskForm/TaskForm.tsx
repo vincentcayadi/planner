@@ -10,12 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, calculateDuration } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';\nimport { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export function TaskForm() {
   const { taskForm, plannerConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
@@ -24,6 +24,7 @@ export function TaskForm() {
   // Calculate derived values
   const startMinutes = timeToMinutes(taskForm.taskStartTime);
   const durationMinutes = parseInt(taskForm.taskDuration, 10) || 0;
+  const calculatedDuration = calculateDuration(taskForm.taskStartTime, taskForm.taskEndTime);
   const endMinutes = startMinutes + durationMinutes;
   const calculatedEndTime = minutesToTime(endMinutes);
 
@@ -71,8 +72,7 @@ export function TaskForm() {
   };
 
   const handleEndTimeChange = (newEnd: string) => {
-    const endMinutes = timeToMinutes(newEnd);
-    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
+    const newDuration = Math.max(plannerConfig.interval, calculateDuration(taskForm.taskStartTime, newEnd));
 
     updateTaskForm({
       taskEndTime: newEnd,
@@ -114,18 +114,20 @@ export function TaskForm() {
           )}
         </div>
 
-        <TimeSelectionInput
-          startTime={taskForm.taskStartTime}
-          duration={durationMinutes}
-          endTime={displayEndTime}
-          useDurationMode={taskForm.useDurationMode}
-          selectedColor={taskForm.selectedColor}
-          plannerConfig={plannerConfig}
-          onStartTimeChange={handleStartTimeChange}
-          onDurationChange={handleDurationChange}
-          onEndTimeChange={handleEndTimeChange}
-          onModeToggle={toggleDurationMode}
-        />
+        <ErrorBoundary>
+          <TimeSelectionInput
+            startTime={taskForm.taskStartTime}
+            duration={calculatedDuration > 0 ? calculatedDuration : durationMinutes}
+            endTime={displayEndTime}
+            useDurationMode={taskForm.useDurationMode}
+            selectedColor={taskForm.selectedColor}
+            plannerConfig={plannerConfig}
+            onStartTimeChange={handleStartTimeChange}
+            onDurationChange={handleDurationChange}
+            onEndTimeChange={handleEndTimeChange}
+            onModeToggle={toggleDurationMode}
+          />
+        </ErrorBoundary>
 
         <div>
           <Label className="text-xs text-neutral-500">Description</Label>
@@ -160,7 +162,7 @@ export function TaskForm() {
             <Button
               onClick={handleAddTask}
               disabled={isSubmitting || !taskForm.taskName.trim()}
-              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50"
+              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">

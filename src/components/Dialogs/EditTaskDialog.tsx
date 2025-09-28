@@ -23,11 +23,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';\nimport { ErrorBoundary } from '@/components/ui/error-boundary';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, to12h, snapToAnchor, calculateDuration } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName, Task } from '@/lib/types';
 
@@ -35,18 +36,26 @@ export function EditTaskDialog() {
   const { editDialog, plannerConfig, closeEditDialog, saveEditedTask, getCurrentSchedule } =
     usePlannerStore();
   const [useDurationMode, setUseDurationMode] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    const result = await saveEditedTask();
+    if (isSaving) return;
 
-    if (result.success) {
-      toast.success('Task updated successfully');
-    } else {
-      if (result.error !== 'Time conflict detected') {
-        toast.error('Failed to update task', {
-          description: result.error,
-        });
+    setIsSaving(true);
+    try {
+      const result = await saveEditedTask();
+
+      if (result.success) {
+        toast.success('Task updated successfully');
+      } else {
+        if (result.error !== 'Time conflict detected') {
+          toast.error('Failed to update task', {
+            description: result.error,
+          });
+        }
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -126,7 +135,7 @@ export function EditTaskDialog() {
 
     const endMinutes = timeToMinutes(newEnd);
     const startMinutes = timeToMinutes(editDialog.editItem.startTime);
-    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
+    const newDuration = Math.max(plannerConfig.interval, calculateDuration(editDialog.editItem.startTime, newEndTime));
     const endLimit = timeToMinutes(plannerConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
 
@@ -200,18 +209,20 @@ export function EditTaskDialog() {
               />
             </div>
 
-            <TimeSelectionInput
-              startTime={editDialog.editItem.startTime}
-              duration={editDialog.editItem.duration}
-              endTime={editDialog.editItem.endTime}
-              useDurationMode={useDurationMode}
-              selectedColor={editDialog.editItem.color}
-              plannerConfig={plannerConfig}
-              onStartTimeChange={handleStartTimeChange}
-              onDurationChange={handleDurationChange}
-              onEndTimeChange={handleEndTimeChange}
-              onModeToggle={toggleDurationMode}
-            />
+            <ErrorBoundary>
+              <TimeSelectionInput
+                startTime={editDialog.editItem.startTime}
+                duration={editDialog.editItem.duration}
+                endTime={editDialog.editItem.endTime}
+                useDurationMode={useDurationMode}
+                selectedColor={editDialog.editItem.color}
+                plannerConfig={plannerConfig}
+                onStartTimeChange={handleStartTimeChange}
+                onDurationChange={handleDurationChange}
+                onEndTimeChange={handleEndTimeChange}
+                onModeToggle={toggleDurationMode}
+              />
+            </ErrorBoundary>
 
             <div>
               <Label className="mb-1 block text-sm font-medium">Description</Label>
@@ -247,7 +258,20 @@ export function EditTaskDialog() {
             <Button variant="outline" onClick={closeEditDialog}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !editDialog.editItem?.name?.trim()}
+              className="transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
