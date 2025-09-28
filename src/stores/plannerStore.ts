@@ -326,11 +326,14 @@ export const usePlannerStore = create<PlannerState>()(
         const startMinutes = timeToMinutes(plannerConfig.startTime);
         const endMinutes = timeToMinutes(plannerConfig.endTime);
 
+        // Remove existing breaks first to prevent duplicates and enable merging
+        const nonBreakTasks = currentSchedule.filter(task => task.name !== 'Break');
+
         const breaks: Task[] = [];
         let cursor = startMinutes;
 
-        // Sort tasks by start time
-        const sortedTasks = [...currentSchedule].sort(
+        // Sort non-break tasks by start time
+        const sortedTasks = [...nonBreakTasks].sort(
           (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
         );
 
@@ -378,7 +381,8 @@ export const usePlannerStore = create<PlannerState>()(
           if (!state.schedules[dateKey]) {
             state.schedules[dateKey] = [];
           }
-          state.schedules[dateKey].push(...breaks);
+          // Replace the schedule with non-break tasks + new breaks
+          state.schedules[dateKey] = [...nonBreakTasks, ...breaks];
           state.schedules[dateKey].sort(
             (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
           );
