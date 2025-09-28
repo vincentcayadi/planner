@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.red.200),_theme(colors.orange.200)_60%,_theme(colors.yellow.100))] p-4">
+        <div className="flex h-screen items-center justify-center bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.red.200),_theme(colors.orange.200)_60%,_theme(colors.yellow.100))] p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -98,6 +98,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return <div className="h-full">{this.props.children}</div>;
   }
 }

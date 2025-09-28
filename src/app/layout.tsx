@@ -70,7 +70,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={geistSans.variable}>
+    <html lang="en" className={`${geistSans.variable} h-full overflow-hidden`}>
       <head>
         {/* Security Headers */}
         <meta
@@ -97,7 +97,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased h-full overflow-hidden">
         <ErrorBoundary>{children}</ErrorBoundary>
 
         {/* Skip to content for accessibility */}

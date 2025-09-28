@@ -91,18 +91,10 @@ export function TaskList() {
         await navigator.clipboard.writeText(url);
         toast.success(forceRefresh ? 'Link refreshed and copied!' : 'Share link copied!', {
           description: url,
-          action: {
-            label: 'Open',
-            onClick: () => window.open(url, '_blank'),
-          },
         });
       } catch {
         toast.success(forceRefresh ? 'Link refreshed!' : 'Share link ready!', {
           description: url,
-          action: {
-            label: 'Open',
-            onClick: () => window.open(url, '_blank'),
-          },
         });
       }
     } catch (error) {
@@ -123,10 +115,6 @@ export function TaskList() {
     if (isLikelyExpired) {
       toast.warning('Link may have expired', {
         description: 'This link is over 24 hours old. Consider refreshing it.',
-        action: {
-          label: 'Refresh',
-          onClick: () => handleShareCurrentDay(true),
-        },
       });
       return;
     }
@@ -135,18 +123,10 @@ export function TaskList() {
       await navigator.clipboard.writeText(existingShare.url);
       toast.success('Link copied!', {
         description: existingShare.url,
-        action: {
-          label: 'Open',
-          onClick: () => window.open(existingShare.url, '_blank'),
-        },
       });
     } catch {
       toast.success('Link ready!', {
         description: existingShare.url,
-        action: {
-          label: 'Open',
-          onClick: () => window.open(existingShare.url, '_blank'),
-        },
       });
     }
   };

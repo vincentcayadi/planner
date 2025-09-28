@@ -101,20 +101,20 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   const date = parseDateKey(data.dateKey);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
-      <div className="flex h-screen">
+    <div className="h-full overflow-hidden bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
+      <div className="flex h-full">
         {/* Main Content - Full width for shared view */}
-        <main className="flex-1 overflow-hidden p-6">
-          <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-6 pb-0 shadow-lg">
-            <CardHeader className="px-8 pt-2 pb-4 space-y-2">
+        <main className="flex-1 overflow-hidden p-3 md:p-6">
+          <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-3 md:pt-6 pb-0 shadow-lg">
+            <CardHeader className="px-4 md:px-8 pt-2 pb-4 space-y-2">
               <div className="grid grid-cols-[1fr_auto] items-end leading-none font-bold tracking-tighter text-neutral-500">
-                <div className="text-5xl">{date.getDate()}</div>
-                <div className="text-3xl">
+                <div className="text-3xl md:text-5xl">{date.getDate()}</div>
+                <div className="text-xl md:text-3xl">
                   {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                 </div>
               </div>
               <div className="space-y-1">
-                <h1 className="text-lg font-semibold text-neutral-800">
+                <h1 className="text-base md:text-lg font-semibold text-neutral-800">
                   {date.toLocaleDateString(undefined, {
                     weekday: 'long',
                     year: 'numeric',
@@ -135,13 +135,13 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                     return (
                       <div
                         key={`avail-${row.time}-${i}`}
-                        className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
+                        className="grid grid-cols-[70px_1fr] sm:grid-cols-[90px_1fr] border-b border-neutral-200 md:grid-cols-[110px_1fr]"
                       >
-                        <div className="flex items-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                        <div className="flex items-center justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm min-h-[44px]">
                           {to12h(row.time)}
                         </div>
-                        <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
-                          <span className="opacity-50">Available</span>
+                        <div className="flex items-center bg-neutral-50 px-2 py-2 text-sm text-neutral-400 sm:px-3 sm:py-3 md:px-4 md:py-4 min-h-[44px]">
+                          <span className="opacity-50 text-xs sm:text-sm">Available</span>
                         </div>
                       </div>
                     );
@@ -152,25 +152,25 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                   return (
                     <div
                       key={`task-${row.task.id}-${i}`}
-                      className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
+                      className="grid grid-cols-[70px_1fr] sm:grid-cols-[90px_1fr] border-b border-neutral-200 md:grid-cols-[110px_1fr]"
                     >
-                      <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                      <div className="flex items-start justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm">
                         {to12h(row.time)}
                       </div>
                       <div
-                        className={`p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
+                        className={`p-2 sm:p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
                         style={{
-                          minHeight: `${row.rowSpan * 60}px`,
-                          height: `${row.rowSpan * 60}px`,
+                          minHeight: `${Math.max(row.rowSpan * 44, 44)}px`,
+                          height: `${Math.max(row.rowSpan * 44, 44)}px`,
                         }}
                       >
-                        <div className="text-lg font-semibold md:text-xl">{row.task.name}</div>
+                        <div className="text-sm font-semibold sm:text-lg md:text-xl">{row.task.name}</div>
                         {row.task.description && (
-                          <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
+                          <div className="text-xs whitespace-pre-wrap text-neutral-700 line-clamp-2 sm:line-clamp-none md:text-sm">
                             {row.task.description}
                           </div>
                         )}
-                        <div className="text-xs text-neutral-600 md:text-sm">
+                        <div className="text-xs text-neutral-600 sm:text-sm md:text-sm">
                           {to12h(row.task.startTime)} – {to12h(row.task.endTime)}
                         </div>
                       </div>

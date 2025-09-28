@@ -98,10 +98,10 @@ export function ScheduleView() {
   }, [timeSlots, currentSchedule, plannerConfig.interval, plannerConfig.endTime]);
 
   return (
-    <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-6 pb-0 shadow-lg">
-      <CardHeader className="grid grid-cols-[1fr_auto] items-end px-8 pt-2 pb-1 leading-none font-bold tracking-tighter text-neutral-500">
-        <div className="text-5xl">{currentDate.getDate()}</div>
-        <div className="text-3xl">
+    <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-3 md:pt-6 pb-0 shadow-lg">
+      <CardHeader className="grid grid-cols-[1fr_auto] items-end px-4 md:px-8 pt-2 pb-1 leading-none font-bold tracking-tighter text-neutral-500">
+        <div className="text-3xl md:text-5xl">{currentDate.getDate()}</div>
+        <div className="text-xl md:text-3xl">
           {currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
         </div>
       </CardHeader>
@@ -115,21 +115,22 @@ export function ScheduleView() {
                 <motion.div
                   key={`${to12h(slot.time)}-${idx}`}
                   whileHover={{ backgroundColor: "rgba(99, 102, 241, 0.05)" }}
+                  whileTap={{ scale: 0.98, backgroundColor: "rgba(99, 102, 241, 0.1)" }}
                   onClick={() => handleQuickAdd(slot.time)}
-                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr] cursor-pointer group transition-colors"
+                  className="grid grid-cols-[70px_1fr] sm:grid-cols-[90px_1fr] border-b border-neutral-200 md:grid-cols-[110px_1fr] cursor-pointer group transition-colors touch-manipulation"
                 >
-                  <div className="flex items-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                  <div className="flex items-center justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm">
                     {to12h(slot.time)}
                   </div>
-                  <div className="flex items-center justify-between bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4 group-hover:bg-indigo-50 transition-colors">
-                    <span className="opacity-50 group-hover:opacity-70 transition-opacity">Available</span>
+                  <div className="flex items-center justify-between bg-neutral-50 px-2 py-2 text-sm text-neutral-400 sm:px-3 sm:py-3 md:px-4 md:py-4 group-hover:bg-indigo-50 transition-colors min-h-[44px]">
+                    <span className="opacity-50 group-hover:opacity-70 transition-opacity text-xs sm:text-sm">Available</span>
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       whileHover={{ opacity: 1, scale: 1 }}
                       className="flex items-center gap-1 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Plus className="h-3 w-3" />
-                      <span className="text-xs font-medium">Add task</span>
+                      <span className="text-xs font-medium hidden sm:inline">Add task</span>
                     </motion.div>
                   </div>
                 </motion.div>
@@ -150,31 +151,34 @@ export function ScheduleView() {
                   ease: "easeOut"
                 }}
                 whileHover={{ scale: 1.01, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
-                className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr] transition-shadow"
+                whileTap={{ scale: 0.99 }}
+                className="grid grid-cols-[70px_1fr] sm:grid-cols-[90px_1fr] border-b border-neutral-200 md:grid-cols-[110px_1fr] transition-shadow touch-manipulation"
               >
-                <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                <div className="flex items-start justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm">
                   {to12h(slot.time)}
                 </div>
                 <motion.div
                   whileHover={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
-                  className={`p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2 transition-colors cursor-pointer`}
+                  whileTap={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
+                  className={`p-2 sm:p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2 transition-colors cursor-pointer`}
                   style={{
-                    minHeight: `${slot.rowSpan * 60}px`,
-                    height: `${slot.rowSpan * 60}px`,
+                    minHeight: `${Math.max(slot.rowSpan * 44, 44)}px`,
+                    height: `${Math.max(slot.rowSpan * 44, 44)}px`,
                   }}
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="text-lg font-semibold md:text-xl"
+                    whileTap={{ scale: 0.98 }}
+                    className="text-sm font-semibold sm:text-lg md:text-xl"
                   >
                     {slot.task.name}
                   </motion.div>
                   {slot.task.description && (
-                    <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
+                    <div className="text-xs whitespace-pre-wrap text-neutral-700 line-clamp-2 sm:line-clamp-none md:text-sm">
                       {slot.task.description}
                     </div>
                   )}
-                  <div className="text-xs text-neutral-600 md:text-sm">
+                  <div className="text-xs text-neutral-600 sm:text-sm md:text-sm">
                     {to12h(slot.task.startTime)} – {to12h(slot.task.endTime)}
                   </div>
                 </motion.div>
