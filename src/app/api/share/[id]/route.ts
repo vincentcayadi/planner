@@ -5,9 +5,6 @@ import { CSP_HEADERS } from '@/lib/security';
 import { isValidTaskId } from '@/lib/types';
 import { shareRateLimit } from '@/lib/security';
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 type Ctx = { params: Promise<{ id: string }> };
 

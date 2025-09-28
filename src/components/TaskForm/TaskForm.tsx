@@ -4,18 +4,13 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName } from '@/lib/types';
 import { motion } from 'framer-motion';
@@ -26,11 +21,14 @@ export function TaskForm() {
   const { taskForm, plannerConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Generate duration options based on interval
-  const durationOptions = useMemo(() => {
-    const safeInterval = Math.max(5, plannerConfig.interval || 30);
-    return Array.from({ length: 12 }, (_, i) => (i + 1) * safeInterval);
-  }, [plannerConfig.interval]);
+  // Calculate derived values
+  const startMinutes = timeToMinutes(taskForm.taskStartTime);
+  const durationMinutes = parseInt(taskForm.taskDuration, 10) || 0;
+  const endMinutes = startMinutes + durationMinutes;
+  const calculatedEndTime = minutesToTime(endMinutes);
+
+  // Use calculated end time if taskEndTime is not set
+  const displayEndTime = taskForm.taskEndTime || calculatedEndTime;
 
   const handleAddTask = async () => {
     if (isSubmitting) return;
@@ -51,38 +49,48 @@ export function TaskForm() {
     }
   };
 
-  const handleStartTimeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const anchor = timeToMinutes(plannerConfig.startTime);
-    const endLimit = timeToMinutes(plannerConfig.endTime);
-    const raw = timeToMinutes(e.target.value);
+  const handleStartTimeChange = (newStart: string) => {
+    const newStartMinutes = timeToMinutes(newStart);
 
-    // Validate against day start
-    if (raw < anchor) {
-      const snapped = Math.max(
-        anchor,
-        Math.min(snapToAnchor(raw, plannerConfig.interval, anchor, 'nearest'), endLimit)
-      );
-
-      toast.error('Invalid start time', {
-        description: `Start time adjusted to ${to12h(minutesToTime(snapped))}`,
+    if (taskForm.useDurationMode) {
+      // Keep duration, update end time
+      const newEndMinutes = newStartMinutes + durationMinutes;
+      updateTaskForm({
+        taskStartTime: newStart,
+        taskEndTime: minutesToTime(newEndMinutes),
       });
-
-      updateTaskForm({ taskStartTime: minutesToTime(snapped) });
-      return;
-    }
-
-    // Snap to grid
-    const snapped = Math.max(
-      anchor,
-      Math.min(snapToAnchor(raw, plannerConfig.interval, anchor, 'nearest'), endLimit)
-    );
-
-    if (snapped !== raw) {
-      toast.info('Time adjusted', {
-        description: `${to12h(minutesToTime(raw))} → ${to12h(minutesToTime(snapped))}`,
+    } else {
+      // Keep end time, update duration
+      const endMinutes = timeToMinutes(taskForm.taskEndTime || displayEndTime);
+      const newDuration = Math.max(plannerConfig.interval, endMinutes - newStartMinutes);
+      updateTaskForm({
+        taskStartTime: newStart,
+        taskDuration: String(newDuration),
       });
-      updateTaskForm({ taskStartTime: minutesToTime(snapped) });
     }
+  };
+
+  const handleEndTimeChange = (newEnd: string) => {
+    const endMinutes = timeToMinutes(newEnd);
+    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
+
+    updateTaskForm({
+      taskEndTime: newEnd,
+      taskDuration: String(newDuration),
+    });
+  };
+
+  const handleDurationChange = (duration: number) => {
+    const newEndMinutes = startMinutes + duration;
+
+    updateTaskForm({
+      taskDuration: String(duration),
+      taskEndTime: minutesToTime(newEndMinutes),
+    });
+  };
+
+  const toggleDurationMode = () => {
+    updateTaskForm({ useDurationMode: !taskForm.useDurationMode });
   };
 
   return (
@@ -106,39 +114,21 @@ export function TaskForm() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="text-xs text-neutral-500">Start</label>
-            <Input
-              type="time"
-              value={taskForm.taskStartTime}
-              onChange={(e) => updateTaskForm({ taskStartTime: e.target.value })}
-              onBlur={handleStartTimeBlur}
-              className="[appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-neutral-500">Duration</label>
-            <Select
-              value={taskForm.taskDuration}
-              onValueChange={(v) => updateTaskForm({ taskDuration: v })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Duration" />
-              </SelectTrigger>
-              <SelectContent>
-                {durationOptions.map((d) => (
-                  <SelectItem key={d} value={String(d)}>
-                    {d >= 60 ? `${d / 60}h` : `${d}min`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <TimeSelectionInput
+          startTime={taskForm.taskStartTime}
+          duration={durationMinutes}
+          endTime={displayEndTime}
+          useDurationMode={taskForm.useDurationMode}
+          selectedColor={taskForm.selectedColor}
+          plannerConfig={plannerConfig}
+          onStartTimeChange={handleStartTimeChange}
+          onDurationChange={handleDurationChange}
+          onEndTimeChange={handleEndTimeChange}
+          onModeToggle={toggleDurationMode}
+        />
 
         <div>
-          <label className="text-xs text-neutral-500">Description</label>
+          <Label className="text-xs text-neutral-500">Description</Label>
           <Textarea
             value={taskForm.taskDesc}
             onChange={(e) => updateTaskForm({ taskDesc: e.target.value })}
@@ -149,7 +139,7 @@ export function TaskForm() {
         </div>
 
         <div>
-          <label className="mb-2 block text-xs text-neutral-500">Color</label>
+          <Label className="mb-2 block text-xs text-neutral-500">Color</Label>
           <div className="grid grid-cols-4 gap-2">
             {COLORS.map((c) => (
               <button

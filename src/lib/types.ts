@@ -99,8 +99,10 @@ export const TaskFormStateSchema = z.object({
   taskDesc: z.string(),
   taskStartTime: TimeSchema,
   taskDuration: z.string(),
+  taskEndTime: TimeSchema.optional(),
   selectedColor: ColorNameSchema,
   nameError: z.boolean(),
+  useDurationMode: z.boolean().default(true),
 });
 
 // Type definitions derived from schemas

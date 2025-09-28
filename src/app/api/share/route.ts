@@ -15,9 +15,6 @@ import type { ShareResponse } from '@/lib/types';
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24; // 24 hours
 const MAX_REQUEST_SIZE = 1024 * 1024; // 1MB
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export async function POST(req: Request): Promise<NextResponse> {
   // Add security headers

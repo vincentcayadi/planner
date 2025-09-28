@@ -4,9 +4,6 @@ import clsx from 'clsx';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { COLORS } from '@/lib/colorConstants';
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 type Task = {
   id: number;
