@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
@@ -35,18 +36,26 @@ export function EditTaskDialog() {
   const { editDialog, plannerConfig, closeEditDialog, saveEditedTask, getCurrentSchedule } =
     usePlannerStore();
   const [useDurationMode, setUseDurationMode] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    const result = await saveEditedTask();
+    if (isSaving) return;
 
-    if (result.success) {
-      toast.success('Task updated successfully');
-    } else {
-      if (result.error !== 'Time conflict detected') {
-        toast.error('Failed to update task', {
-          description: result.error,
-        });
+    setIsSaving(true);
+    try {
+      const result = await saveEditedTask();
+
+      if (result.success) {
+        toast.success('Task updated successfully');
+      } else {
+        if (result.error !== 'Time conflict detected') {
+          toast.error('Failed to update task', {
+            description: result.error,
+          });
+        }
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -247,7 +256,20 @@ export function EditTaskDialog() {
             <Button variant="outline" onClick={closeEditDialog}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !editDialog.editItem?.name?.trim()}
+              className="transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

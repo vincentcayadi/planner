@@ -1,7 +1,7 @@
 // src/components/Dialogs/ClearAllDialog.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,10 +14,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { toast } from 'sonner';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export function ClearAllDialog() {
   const { clearAllDialog, closeClearAllDialog, clearAllTasks, currentDate, getCurrentSchedule } =
     usePlannerStore();
+  const [isClearing, setIsClearing] = useState(false);
 
   const currentSchedule = getCurrentSchedule();
   const dateString = currentDate.toLocaleDateString('en-US', {
@@ -26,11 +28,20 @@ export function ClearAllDialog() {
     day: 'numeric',
   });
 
-  const handleClearAll = () => {
-    clearAllTasks();
-    toast.success('Day cleared', {
-      description: `All tasks for ${dateString} have been removed`,
-    });
+  const handleClearAll = async () => {
+    if (isClearing) return;
+
+    setIsClearing(true);
+    try {
+      // Brief delay to show loading state
+      await new Promise(resolve => setTimeout(resolve, 200));
+      clearAllTasks();
+      toast.success('Day cleared', {
+        description: `All tasks for ${dateString} have been removed`,
+      });
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   return (
@@ -54,10 +65,18 @@ export function ClearAllDialog() {
         <AlertDialogFooter>
           <AlertDialogCancel>Keep Tasks</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleClearAll}
+            disabled={isClearing}
           >
-            Clear All
+            {isClearing ? (
+              <div className="flex items-center gap-2">
+                <LoadingSpinner size="sm" />
+                <span>Clearing...</span>
+              </div>
+            ) : (
+              'Clear All'
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
