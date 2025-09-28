@@ -1,6 +1,8 @@
 import { kv } from '@/lib/kv';
 import { notFound } from 'next/navigation';
 import clsx from 'clsx';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { COLORS } from '@/lib/colorConstants';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -22,16 +24,6 @@ type SharedDay = {
   planner?: { startTime: string; endTime: string; interval: number };
 };
 
-const colors = [
-  { name: 'blue', bg: 'bg-blue-200', text: 'text-blue-800' },
-  { name: 'green', bg: 'bg-green-200', text: 'text-green-800' },
-  { name: 'yellow', bg: 'bg-yellow-200', text: 'text-yellow-800' },
-  { name: 'purple', bg: 'bg-purple-200', text: 'text-purple-800' },
-  { name: 'pink', bg: 'bg-pink-200', text: 'text-pink-800' },
-  { name: 'orange', bg: 'bg-orange-200', text: 'text-orange-800' },
-  { name: 'cyan', bg: 'bg-cyan-200', text: 'text-cyan-800' },
-  { name: 'neutral', bg: 'bg-neutral-200', text: 'text-neutral-800' },
-];
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(':').map(Number);
@@ -110,88 +102,89 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <header className="mb-6 flex items-end justify-between">
-          <div>
-            <h1 className="mb-2 text-2xl font-bold tracking-tight">
-              Shared Day —{' '}
-              {date.toLocaleDateString(undefined, {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </h1>
-            <p className="text-sm text-neutral-600">
-              Window: {to12h(planner.startTime)} – {to12h(planner.endTime)} · Interval{' '}
-              {planner.interval}m
-            </p>
-          </div>
-        </header>
-
-        <div className="overflow-hidden rounded-2xl bg-white/70 shadow-lg backdrop-blur">
-          <div className="divide-y divide-neutral-200">
-            {rows.map((row, i) =>
-              !row.task ? (
-                <div
-                  key={`avail-${row.time}-${i}`}
-                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
-                >
-                  <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
-                    {to12h(row.time)}
-                  </div>
-                  <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
-                    <span className="opacity-50">Available</span>
-                  </div>
+      <div className="flex h-screen">
+        {/* Main Content - Full width for shared view */}
+        <main className="flex-1 overflow-hidden p-6">
+          <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-6 pb-0 shadow-lg">
+            <CardHeader className="px-8 pt-2 pb-4 space-y-2">
+              <div className="grid grid-cols-[1fr_auto] items-end leading-none font-bold tracking-tighter text-neutral-500">
+                <div className="text-5xl">{date.getDate()}</div>
+                <div className="text-3xl">
+                  {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                 </div>
-              ) : (
-                <div
-                  key={`task-${row.task.id}-${i}`}
-                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
-                >
-                  <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
-                    {to12h(row.time)}
-                  </div>
-                  <div
-                    className={clsx(
-                      '${c?.bg} ${c?.text} flex flex-col items-center justify-center gap-1 p-4 text-center md:gap-2 md:p-6',
-                      colors.find((x) => x.name === row.task!.color)?.bg
-                    )}
-                    style={{
-                      minHeight: row.rowSpan * 60,
-                      height: row.rowSpan * 60,
-                    }}
-                  >
-                    <div>
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-lg font-semibold text-neutral-800">
+                  {date.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </h1>
+                <p className="text-xs text-neutral-600">
+                  {to12h(planner.startTime)} – {to12h(planner.endTime)} · {planner.interval}m intervals · Read-only view
+                </p>
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-1 flex-col overflow-y-auto p-0">
+              <div className="flex-1">
+                {rows.map((row, i) => {
+                  if (!row.task) {
+                    return (
                       <div
-                        className={clsx(
-                          'text-lg font-semibold md:text-xl',
-                          colors.find((x) => x.name === row.task!.color)?.text
-                        )}
+                        key={`avail-${row.time}-${i}`}
+                        className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
                       >
-                        {row.task.name}
-                      </div>
-                      {row.task.description ? (
-                        <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
-                          {row.task.description}
+                        <div className="flex items-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                          {to12h(row.time)}
                         </div>
-                      ) : null}
-                      <div className="text-xs text-neutral-600 md:text-sm">
-                        {to12h(row.task.startTime)} – {to12h(row.task.endTime)}
+                        <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
+                          <span className="opacity-50">Available</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const colorConfig = COLORS.find((x) => x.name === row.task.color);
+
+                  return (
+                    <div
+                      key={`task-${row.task.id}-${i}`}
+                      className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
+                    >
+                      <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
+                        {to12h(row.time)}
+                      </div>
+                      <div
+                        className={`p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
+                        style={{
+                          minHeight: `${row.rowSpan * 60}px`,
+                          height: `${row.rowSpan * 60}px`,
+                        }}
+                      >
+                        <div className="text-lg font-semibold md:text-xl">{row.task.name}</div>
+                        {row.task.description && (
+                          <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
+                            {row.task.description}
+                          </div>
+                        )}
+                        <div className="text-xs text-neutral-600 md:text-sm">
+                          {to12h(row.task.startTime)} – {to12h(row.task.endTime)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )
-            )}
+                  );
+                })}
 
-            {rows.length === 0 && (
-              <div className="p-8 text-center text-neutral-600">No items for this day.</div>
-            )}
-          </div>
-        </div>
-
-        <p className="mt-4 text-xs text-neutral-500">This view is read-only.</p>
+                {rows.length === 0 && (
+                  <div className="p-8 text-center text-neutral-600">No items for this day.</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
       </div>
     </div>
   );

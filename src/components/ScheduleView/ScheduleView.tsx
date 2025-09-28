@@ -7,6 +7,8 @@ import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
 import { timeToMinutes, minutesToTime, to12h, formatDateKey } from '@/lib/utils/time'; // Add formatDateKey import
 import type { Task } from '@/lib/types';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
 
 interface ScheduleDisplayRow {
   time: string;
@@ -16,7 +18,16 @@ interface ScheduleDisplayRow {
 }
 
 export function ScheduleView() {
-  const { currentDate, plannerConfig, schedules } = usePlannerStore();
+  const { currentDate, plannerConfig, schedules, updateTaskForm } = usePlannerStore();
+
+  const handleQuickAdd = (time: string) => {
+    updateTaskForm({ taskStartTime: time });
+    // Scroll to task form (we can enhance this later)
+    const taskForm = document.querySelector('[data-task-form]');
+    if (taskForm) {
+      taskForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   // Add this: compute current schedule locally
   const currentSchedule = useMemo(() => {
@@ -97,41 +108,67 @@ export function ScheduleView() {
 
       <CardContent className="flex flex-1 flex-col overflow-y-auto p-0">
         <div className="flex-1">
-          {scheduleDisplay.map((slot, idx) => {
+          <AnimatePresence mode="popLayout">
+            {scheduleDisplay.map((slot, idx) => {
             if (!slot.task) {
               return (
-                <div
+                <motion.div
                   key={`${to12h(slot.time)}-${idx}`}
-                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
+                  whileHover={{ backgroundColor: "rgba(99, 102, 241, 0.05)" }}
+                  onClick={() => handleQuickAdd(slot.time)}
+                  className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr] cursor-pointer group transition-colors"
                 >
                   <div className="flex items-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                     {to12h(slot.time)}
                   </div>
-                  <div className="flex items-center bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4">
-                    <span className="opacity-50">Available</span>
+                  <div className="flex items-center justify-between bg-neutral-50 px-3 py-3 text-sm text-neutral-400 md:px-4 md:py-4 group-hover:bg-indigo-50 transition-colors">
+                    <span className="opacity-50 group-hover:opacity-70 transition-opacity">Available</span>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileHover={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-1 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span className="text-xs font-medium">Add task</span>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               );
             }
 
             const colorConfig = COLORS.find((x) => x.name === slot.task.color);
 
             return (
-              <div
+              <motion.div
                 key={`${slot.task.id}-${idx}`}
-                className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr]"
+                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{
+                  duration: 0.25,
+                  delay: idx * 0.015,
+                  ease: "easeOut"
+                }}
+                whileHover={{ scale: 1.01, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
+                className="grid grid-cols-[80px_1fr] border-b border-neutral-200 md:grid-cols-[96px_1fr] transition-shadow"
               >
                 <div className="flex items-start border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-tighter whitespace-nowrap text-neutral-700 tabular-nums md:px-4 md:py-4 md:text-sm">
                   {to12h(slot.time)}
                 </div>
-                <div
-                  className={`p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
+                <motion.div
+                  whileHover={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
+                  className={`p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2 transition-colors cursor-pointer`}
                   style={{
                     minHeight: `${slot.rowSpan * 60}px`,
                     height: `${slot.rowSpan * 60}px`,
                   }}
                 >
-                  <div className="text-lg font-semibold md:text-xl">{slot.task.name}</div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="text-lg font-semibold md:text-xl"
+                  >
+                    {slot.task.name}
+                  </motion.div>
                   {slot.task.description && (
                     <div className="text-xs whitespace-pre-wrap text-neutral-700 md:text-sm">
                       {slot.task.description}
@@ -140,10 +177,11 @@ export function ScheduleView() {
                   <div className="text-xs text-neutral-600 md:text-sm">
                     {to12h(slot.task.startTime)} – {to12h(slot.task.endTime)}
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             );
-          })}
+            })}
+          </AnimatePresence>
         </div>
       </CardContent>
     </Card>

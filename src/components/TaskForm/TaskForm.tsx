@@ -1,7 +1,7 @@
 // src/components/TaskForm/TaskForm.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +18,13 @@ import { COLORS } from '@/lib/colorConstants';
 import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName } from '@/lib/types';
+import { motion } from 'framer-motion';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Plus } from 'lucide-react';
 
 export function TaskForm() {
   const { taskForm, plannerConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Generate duration options based on interval
   const durationOptions = useMemo(() => {
@@ -29,14 +33,21 @@ export function TaskForm() {
   }, [plannerConfig.interval]);
 
   const handleAddTask = async () => {
-    const result = await addTask();
+    if (isSubmitting) return;
 
-    if (result.success) {
-      toast.success('Task added successfully');
-    } else {
-      toast.error('Failed to add task', {
-        description: result.error,
-      });
+    setIsSubmitting(true);
+    try {
+      const result = await addTask();
+
+      if (result.success) {
+        toast.success('Task added successfully');
+      } else {
+        toast.error('Failed to add task', {
+          description: result.error,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,7 +86,7 @@ export function TaskForm() {
   };
 
   return (
-    <Card className="gap-0">
+    <Card className="gap-0" data-task-form>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm">Add Task</CardTitle>
       </CardHeader>
@@ -155,9 +166,25 @@ export function TaskForm() {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleAddTask} className="flex-1">
-            Add Task
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+            <Button
+              onClick={handleAddTask}
+              disabled={isSubmitting || !taskForm.taskName.trim()}
+              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Adding...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Add Task</span>
+                </div>
+              )}
+            </Button>
+          </motion.div>
         </div>
       </CardContent>
     </Card>
