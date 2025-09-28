@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime, to12h } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, to12h, formatDateKey } from '@/lib/utils/time'; // Add formatDateKey import
 import type { Task } from '@/lib/types';
 
 interface ScheduleDisplayRow {
@@ -16,7 +16,13 @@ interface ScheduleDisplayRow {
 }
 
 export function ScheduleView() {
-  const { currentDate, plannerConfig, getCurrentSchedule } = usePlannerStore();
+  const { currentDate, plannerConfig, schedules } = usePlannerStore();
+
+  // Add this: compute current schedule locally
+  const currentSchedule = useMemo(() => {
+    const dateKey = formatDateKey(currentDate);
+    return schedules[dateKey] || [];
+  }, [schedules, currentDate]);
 
   const timeSlots = useMemo(() => {
     const slots: string[] = [];
@@ -35,7 +41,8 @@ export function ScheduleView() {
   }, [plannerConfig.startTime, plannerConfig.endTime, plannerConfig.interval]);
 
   const scheduleDisplay = useMemo((): ScheduleDisplayRow[] => {
-    const schedule = getCurrentSchedule();
+    // Change this line: use currentSchedule instead of getCurrentSchedule()
+    const schedule = currentSchedule;
     const display: ScheduleDisplayRow[] = [];
     const safeInterval = Math.max(5, plannerConfig.interval || 30);
     const dayEnd = timeToMinutes(plannerConfig.endTime);
@@ -77,7 +84,7 @@ export function ScheduleView() {
     }
 
     return display;
-  }, [timeSlots, getCurrentSchedule, plannerConfig.interval, plannerConfig.endTime]);
+  }, [timeSlots, currentSchedule, plannerConfig.interval, plannerConfig.endTime]);
 
   return (
     <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-6 pb-0 shadow-lg">

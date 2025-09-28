@@ -1,7 +1,8 @@
 // src/app/api/share/[id]/route.ts
 import { NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
-import { isValidTaskId, CSP_HEADERS } from '@/lib/security';
+import { CSP_HEADERS } from '@/lib/security';
+import { isValidTaskId } from '@/lib/types';
 import { shareRateLimit } from '@/lib/security';
 
 export const runtime = 'edge';

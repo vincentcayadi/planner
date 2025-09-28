@@ -38,14 +38,16 @@ export function ClearAllDialog() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Clear All Tasks?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently remove all {currentSchedule.length} task
-            {currentSchedule.length > 1 ? 's' : ''} for <strong>{dateString}</strong>.
-            <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
-              <p className="text-sm text-red-800">
-                <strong>Warning:</strong> This action cannot be undone. Consider exporting your data
-                first.
-              </p>
+          <AlertDialogDescription asChild>
+            <div>
+              This will permanently remove all {currentSchedule.length} task
+              {currentSchedule.length > 1 ? 's' : ''} for <strong>{dateString}</strong>.
+              <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
+                <span className="text-sm text-red-800">
+                  <strong>Warning:</strong> This action cannot be undone. Consider exporting your
+                  data first.
+                </span>
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>

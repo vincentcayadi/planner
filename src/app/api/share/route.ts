@@ -81,7 +81,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     // Validate and sanitize the request data
     const validation = validateAndSanitizeShareRequest(payload);
     if (!validation.success) {
-      return NextResponse.json(validation.error, { status: 400, headers });
+      return NextResponse.json('error' in validation ? validation.error : { error: 'Validation failed' }, { status: 400, headers });
     }
 
     // Generate secure ID

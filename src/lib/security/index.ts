@@ -78,7 +78,7 @@ export function validateAndSanitizeShareRequest(data: unknown): ApiResponse<Shar
       error: {
         error: 'Invalid request data',
         code: 'VALIDATION_ERROR',
-        details: { errors: validation.errors },
+        details: { validationErrors: 'errors' in validation ? validation.errors : [] },
       },
     };
   }

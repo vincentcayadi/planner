@@ -17,8 +17,7 @@ export const metadata: Metadata = {
     default: 'Planner - Smart Schedule Management',
     template: '%s | Planner',
   },
-  description:
-    'Organize your time efficiently with our smart planning tool. Create schedules, manage tasks, and share your plans securely.',
+  description: 'Minimal. Fast',
   keywords: ['planner', 'schedule', 'time management', 'productivity', 'calendar'],
   authors: [{ name: 'Planner Team' }],
   creator: 'Planner',
@@ -46,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Smart Schedule Management',
-    description: 'Organize your time efficiently with our smart planning tool.',
+    description: 'Minimal. Fast',
     images: ['/og-image.png'],
   },
   robots: {

@@ -104,7 +104,7 @@ export const usePlannerStore = create<PlannerState>()(
       schedules: {},
       currentDate: new Date(),
       plannerConfig: initialPlannerConfig,
-      taskForm: initialTaskForm,
+      taskForm: { ...initialTaskForm, taskStartTime: initialPlannerConfig.startTime },
 
       conflictDialog: {
         isOpen: false,
@@ -137,6 +137,11 @@ export const usePlannerStore = create<PlannerState>()(
       updatePlannerConfig: (config: Partial<PlannerConfig>) => {
         set((state) => {
           Object.assign(state.plannerConfig, config);
+
+          // If start time is being updated, also update the task form's default start time
+          if (config.startTime) {
+            state.taskForm.taskStartTime = config.startTime;
+          }
         });
 
         // Persist to IndexedDB
@@ -152,7 +157,11 @@ export const usePlannerStore = create<PlannerState>()(
 
       resetTaskForm: () => {
         set((state) => {
-          state.taskForm = { ...initialTaskForm };
+          const { plannerConfig } = get();
+          state.taskForm = {
+            ...initialTaskForm,
+            taskStartTime: plannerConfig.startTime
+          };
         });
       },
 
@@ -541,6 +550,11 @@ export const usePlannerStore = create<PlannerState>()(
             if (startTimeRow?.value) state.plannerConfig.startTime = startTimeRow.value;
             if (endTimeRow?.value) state.plannerConfig.endTime = endTimeRow.value;
             if (intervalRow?.value) state.plannerConfig.interval = Number(intervalRow.value);
+
+            // Sync task form start time with loaded planner start time
+            if (startTimeRow?.value) {
+              state.taskForm.taskStartTime = startTimeRow.value;
+            }
           });
         } catch (error) {
           console.error('Failed to load from storage:', error);
