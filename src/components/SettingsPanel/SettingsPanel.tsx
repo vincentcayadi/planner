@@ -22,10 +22,30 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload } from 'lucide-react';
 
 // File System Access API types
+interface FilePickerOptions {
+  types?: Array<{
+    description: string;
+    accept: Record<string, string[]>;
+  }>;
+  excludeAcceptAllOption?: boolean;
+  suggestedName?: string;
+  multiple?: boolean;
+}
+
+interface FileSystemFileHandle {
+  createWritable(): Promise<FileSystemWritableFileStream>;
+  getFile(): Promise<File>;
+}
+
+interface FileSystemWritableFileStream {
+  write(data: any): Promise<void>;
+  close(): Promise<void>;
+}
+
 type FSWin = Window &
   typeof globalThis & {
-    showSaveFilePicker?: (opts?: any) => Promise<any>;
-    showOpenFilePicker?: (opts?: any) => Promise<any>;
+    showSaveFilePicker?: (opts?: FilePickerOptions) => Promise<FileSystemFileHandle>;
+    showOpenFilePicker?: (opts?: FilePickerOptions) => Promise<FileSystemFileHandle[]>;
   };
 
 export function SettingsPanel() {
