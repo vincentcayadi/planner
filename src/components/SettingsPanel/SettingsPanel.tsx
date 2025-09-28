@@ -4,6 +4,7 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -185,7 +186,7 @@ export function SettingsPanel() {
         <CardContent className="space-y-3 pt-0">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs text-neutral-500">Start</label>
+              <Label className="mb-1 block text-xs text-neutral-500">Start</Label>
               <Input
                 type="time"
                 value={plannerConfig.startTime}
@@ -194,7 +195,7 @@ export function SettingsPanel() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-neutral-500">End</label>
+              <Label className="mb-1 block text-xs text-neutral-500">End</Label>
               <Input
                 type="time"
                 value={plannerConfig.endTime}
@@ -205,7 +206,7 @@ export function SettingsPanel() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</label>
+            <Label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</Label>
             <Select
               value={String(plannerConfig.interval)}
               onValueChange={(v) => updatePlannerConfig({ interval: Number(v) })}
@@ -222,7 +223,7 @@ export function SettingsPanel() {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs text-neutral-500">Data Management</label>
+            <Label className="mb-2 block text-xs text-neutral-500">Data Management</Label>
             <div className="grid grid-cols-2 gap-2">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button

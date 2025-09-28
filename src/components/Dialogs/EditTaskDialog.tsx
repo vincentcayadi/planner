@@ -1,7 +1,7 @@
 // src/components/Dialogs/EditTaskDialog.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,28 +22,19 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName, Task } from '@/lib/types';
 
 export function EditTaskDialog() {
   const { editDialog, plannerConfig, closeEditDialog, saveEditedTask, getCurrentSchedule } =
     usePlannerStore();
-
-  const durationOptions = useMemo(() => {
-    const safeInterval = Math.max(5, plannerConfig.interval || 30);
-    return Array.from({ length: 12 }, (_, i) => (i + 1) * safeInterval);
-  }, [plannerConfig.interval]);
+  const [useDurationMode, setUseDurationMode] = useState(true);
 
   const handleSave = async () => {
     const result = await saveEditedTask();
@@ -116,10 +107,9 @@ export function EditTaskDialog() {
     }
   };
 
-  const handleDurationChange = (newDuration: string) => {
+  const handleDurationChange = (duration: number) => {
     if (!editDialog.editItem) return;
 
-    const duration = Number(newDuration);
     const startMinutes = timeToMinutes(editDialog.editItem.startTime);
     const endMinutes = startMinutes + duration;
     const endLimit = timeToMinutes(plannerConfig.endTime);
@@ -129,6 +119,25 @@ export function EditTaskDialog() {
       duration: clampedEnd - startMinutes,
       endTime: minutesToTime(clampedEnd),
     });
+  };
+
+  const handleEndTimeChange = (newEnd: string) => {
+    if (!editDialog.editItem) return;
+
+    const endMinutes = timeToMinutes(newEnd);
+    const startMinutes = timeToMinutes(editDialog.editItem.startTime);
+    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
+    const endLimit = timeToMinutes(plannerConfig.endTime);
+    const clampedEnd = Math.min(endMinutes, endLimit);
+
+    updateEditItem({
+      duration: clampedEnd - startMinutes,
+      endTime: minutesToTime(clampedEnd),
+    });
+  };
+
+  const toggleDurationMode = () => {
+    setUseDurationMode(!useDurationMode);
   };
 
   const handleEditConflictOverride = () => {
@@ -183,7 +192,7 @@ export function EditTaskDialog() {
 
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Task Name</label>
+              <Label className="mb-1 block text-sm font-medium">Task Name</Label>
               <Input
                 value={editDialog.editItem.name}
                 onChange={(e) => updateEditItem({ name: e.target.value })}
@@ -191,39 +200,21 @@ export function EditTaskDialog() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Start Time</label>
-                <Input
-                  type="time"
-                  value={editDialog.editItem.startTime}
-                  onChange={(e) => handleStartTimeChange(e.target.value)}
-                  onBlur={handleStartTimeBlur}
-                  className="[appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">Duration</label>
-                <Select
-                  value={String(editDialog.editItem.duration)}
-                  onValueChange={handleDurationChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Duration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {durationOptions.map((d) => (
-                      <SelectItem key={d} value={String(d)}>
-                        {d >= 60 ? `${d / 60}h` : `${d}min`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <TimeSelectionInput
+              startTime={editDialog.editItem.startTime}
+              duration={editDialog.editItem.duration}
+              endTime={editDialog.editItem.endTime}
+              useDurationMode={useDurationMode}
+              selectedColor={editDialog.editItem.color}
+              plannerConfig={plannerConfig}
+              onStartTimeChange={handleStartTimeChange}
+              onDurationChange={handleDurationChange}
+              onEndTimeChange={handleEndTimeChange}
+              onModeToggle={toggleDurationMode}
+            />
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Description</label>
+              <Label className="mb-1 block text-sm font-medium">Description</Label>
               <Textarea
                 value={editDialog.editItem.description || ''}
                 onChange={(e) => updateEditItem({ description: e.target.value })}
@@ -233,7 +224,7 @@ export function EditTaskDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Color</label>
+              <Label className="mb-2 block text-sm font-medium">Color</Label>
               <div className="grid grid-cols-4 gap-2">
                 {COLORS.map((color) => (
                   <button
@@ -250,13 +241,6 @@ export function EditTaskDialog() {
                 ))}
               </div>
             </div>
-
-            {editDialog.editItem.startTime && editDialog.editItem.endTime && (
-              <div className="rounded bg-neutral-50 p-2 text-sm text-neutral-600">
-                <strong>Preview:</strong> {to12h(editDialog.editItem.startTime)} –{' '}
-                {to12h(editDialog.editItem.endTime)}
-              </div>
-            )}
           </div>
 
           <DialogFooter>

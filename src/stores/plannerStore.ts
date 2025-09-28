@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { Task, ColorName, TaskFormState, PlannerConfig, PlannerExport } from '@/lib/types';
-import { formatDateKey, timeToMinutes, overlaps } from '@/lib/utils/time';
+import { formatDateKey, timeToMinutes, minutesToTime, overlaps } from '@/lib/utils/time';
 import Dexie from 'dexie';
 
 // Database setup
@@ -95,8 +95,10 @@ const initialTaskForm: TaskFormState = {
   taskDesc: '',
   taskStartTime: '08:00',
   taskDuration: '60',
+  taskEndTime: '09:00',
   selectedColor: 'blue',
   nameError: false,
+  useDurationMode: true,
 };
 
 const initialPlannerConfig: PlannerConfig = {
@@ -167,9 +169,15 @@ export const usePlannerStore = create<PlannerState>()(
       resetTaskForm: () => {
         set((state) => {
           const { plannerConfig } = get();
+          const startMinutes = timeToMinutes(plannerConfig.startTime);
+          const durationMinutes = parseInt(initialTaskForm.taskDuration, 10);
+          const endMinutes = startMinutes + durationMinutes;
+          const endTime = minutesToTime(endMinutes);
+
           state.taskForm = {
             ...initialTaskForm,
-            taskStartTime: plannerConfig.startTime
+            taskStartTime: plannerConfig.startTime,
+            taskEndTime: endTime,
           };
         });
       },
