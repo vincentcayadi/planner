@@ -282,15 +282,6 @@ export function TimeSelectionInput({
         )}
       </div>
 
-      {/* Live Preview */}
-      <div className={`text-sm text-center rounded-md p-3 ${colorConfig?.bg} ${colorConfig?.text} transition-colors`}>
-        <div className="font-medium">
-          {to12h(startTime)} → {to12h(endTime)}
-        </div>
-        <div className="text-xs opacity-75 mt-1">
-          {duration}min
-        </div>
-      </div>
     </div>
   );
 }

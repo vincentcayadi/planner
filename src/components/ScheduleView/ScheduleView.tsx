@@ -151,11 +151,11 @@ export function ScheduleView() {
                 );
               }
 
-              const colorConfig = COLORS.find((x) => x.name === slot.task.color);
+              const colorConfig = COLORS.find((x) => x.name === slot.task!.color);
 
               return (
                 <motion.div
-                  key={`${slot.task.id}-${idx}`}
+                  key={`${slot.task!.id}-${idx}`}
                   initial={{ opacity: 0, y: 8, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -178,15 +178,15 @@ export function ScheduleView() {
                     }}
                   >
                     <div className={`font-semibold ${slot.rowSpan === 1 ? 'text-xs sm:text-sm md:text-base' : 'text-sm sm:text-lg md:text-xl'}`}>
-                      {slot.task.name}
+                      {slot.task!.name}
                     </div>
-                    {slot.task.description && slot.rowSpan > 1 && (
+                    {slot.task!.description && slot.rowSpan > 1 && (
                       <div className="line-clamp-2 text-xs whitespace-pre-wrap text-neutral-700 sm:line-clamp-none md:text-sm">
-                        {slot.task.description}
+                        {slot.task!.description}
                       </div>
                     )}
                     <div className={`text-neutral-600 ${slot.rowSpan === 1 ? 'text-xs' : 'text-xs sm:text-sm md:text-sm'}`}>
-                      {to12h(slot.task.startTime)} – {to12h(slot.task.endTime)}
+                      {to12h(slot.task!.startTime)} – {to12h(slot.task!.endTime)}
                     </div>
                   </motion.div>
                 </motion.div>

@@ -81,7 +81,7 @@ export function EditTaskDialog() {
     if (!editDialog.editItem) return;
 
     const startMinutes = timeToMinutes(newStartTime);
-    const endMinutes = startMinutes + (editDialog.editItem.duration || 0);
+    const endMinutes = startMinutes + (editDialog.editItem!.duration || 0);
     const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
 
@@ -123,7 +123,7 @@ export function EditTaskDialog() {
   const handleDurationChange = (duration: number) => {
     if (!editDialog.editItem) return;
 
-    const startMinutes = timeToMinutes(editDialog.editItem.startTime);
+    const startMinutes = timeToMinutes(editDialog.editItem!.startTime);
     const endMinutes = startMinutes + duration;
     const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
@@ -138,7 +138,7 @@ export function EditTaskDialog() {
     if (!editDialog.editItem) return;
 
     const endMinutes = timeToMinutes(newEnd);
-    const startMinutes = timeToMinutes(editDialog.editItem.startTime);
+    const startMinutes = timeToMinutes(editDialog.editItem!.startTime);
     const newDuration = Math.max(dayConfig.interval, endMinutes - startMinutes);
     const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
@@ -207,18 +207,18 @@ export function EditTaskDialog() {
             <div>
               <Label className="mb-1 block text-sm font-medium">Task Name</Label>
               <Input
-                value={editDialog.editItem.name}
+                value={editDialog.editItem!.name}
                 onChange={(e) => updateEditItem({ name: e.target.value })}
                 placeholder="Enter task name"
               />
             </div>
 
             <TimeSelectionInput
-              startTime={editDialog.editItem.startTime}
-              duration={editDialog.editItem.duration}
-              endTime={editDialog.editItem.endTime}
+              startTime={editDialog.editItem!.startTime}
+              duration={editDialog.editItem!.duration}
+              endTime={editDialog.editItem!.endTime}
               useDurationMode={useDurationMode}
-              selectedColor={editDialog.editItem.color}
+              selectedColor={editDialog.editItem!.color}
               plannerConfig={dayConfig}
               onStartTimeChange={handleStartTimeChange}
               onDurationChange={handleDurationChange}
@@ -229,7 +229,7 @@ export function EditTaskDialog() {
             <div>
               <Label className="mb-1 block text-sm font-medium">Description</Label>
               <Textarea
-                value={editDialog.editItem.description || ''}
+                value={editDialog.editItem!.description || ''}
                 onChange={(e) => updateEditItem({ description: e.target.value })}
                 placeholder="Optional task description"
                 rows={3}
@@ -245,7 +245,7 @@ export function EditTaskDialog() {
                     type="button"
                     onClick={() => updateEditItem({ color: color.name as ColorName })}
                     className={`h-8 rounded-lg ${color.bg} ${
-                      editDialog.editItem.color === color.name
+                      editDialog.editItem!.color === color.name
                         ? 'ring-2 ring-neutral-400 ring-offset-2'
                         : ''
                     } cursor-pointer transition-all duration-200 hover:scale-105`}

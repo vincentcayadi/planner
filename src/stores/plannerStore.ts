@@ -85,6 +85,7 @@ interface PlannerState {
   // Utility functions
   getCurrentSchedule: () => Task[];
   findConflictingTasks: (startTime: string, endTime: string, excludeId?: string) => Task[];
+  checkDayConfigConflicts: (dateKey: string, newConfig: DayConfig) => Task[];
 
   // Data persistence
   loadFromStorage: () => Promise<void>;
@@ -583,6 +584,22 @@ export const usePlannerStore = create<PlannerState>()(
           const taskEnd = timeToMinutes(task.endTime);
 
           return overlaps(startMinutes, endMinutes, taskStart, taskEnd);
+        });
+      },
+
+      checkDayConfigConflicts: (dateKey: string, newConfig: DayConfig) => {
+        const { schedules } = get();
+        const dayTasks = schedules[dateKey] || [];
+
+        const newDayStart = timeToMinutes(newConfig.startTime);
+        const newDayEnd = timeToMinutes(newConfig.endTime);
+
+        return dayTasks.filter((task) => {
+          const taskStart = timeToMinutes(task.startTime);
+          const taskEnd = timeToMinutes(task.endTime);
+
+          // Check if task falls outside new day bounds
+          return taskStart < newDayStart || taskEnd > newDayEnd;
         });
       },
 

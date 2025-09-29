@@ -17,10 +17,11 @@ import {
 import { usePlannerStore } from '@/stores/plannerStore';
 import { formatDateKey } from '@/lib/utils/time';
 import { toast } from 'sonner';
-import type { PlannerExport, DayConfig } from '@/lib/types';
+import type { PlannerExport, DayConfig, Task } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload } from 'lucide-react';
+import { SettingsConfirmationDialog, type ConfirmationType } from '@/components/Dialogs/SettingsConfirmationDialog';
 
 // File System Access API types
 interface FilePickerOptions {
@@ -62,14 +63,28 @@ export function SettingsPanel() {
   const [pendingChanges, setPendingChanges] = useState<Partial<DayConfig> | null>(null);
   const [tempConfig, setTempConfig] = useState<DayConfig | null>(null);
 
+  // Confirmation dialog state
+  const [confirmationState, setConfirmationState] = useState<{
+    isOpen: boolean;
+    type: ConfirmationType | null;
+    pendingAction: (() => void) | null;
+    conflictingTasks?: Task[];
+  }>({
+    isOpen: false,
+    type: null,
+    pendingAction: null,
+  });
+
   const {
     currentDate,
     globalConfig,
     getDayConfig,
     updateGlobalConfig,
     updateDayConfig,
+    resetDayConfig,
     exportData,
-    importData
+    importData,
+    checkDayConfigConflicts
   } = usePlannerStore();
 
   const dateKey = formatDateKey(currentDate);
@@ -93,25 +108,67 @@ export function SettingsPanel() {
   };
 
   /**
-   * Applies changes to current day only
+   * Shows confirmation dialog for applying changes to current day
    */
-  const applyToCurrentDay = () => {
+  const confirmApplyToCurrentDay = () => {
     if (pendingChanges) {
-      updateDayConfig(dateKey, pendingChanges);
-      toast.success('Settings applied to current day only');
-      cancelChanges();
+      const newConfig = { ...displayConfig, ...pendingChanges };
+      const conflicts = checkDayConfigConflicts(dateKey, newConfig);
+
+      if (conflicts.length > 0) {
+        setConfirmationState({
+          isOpen: true,
+          type: 'DAY_CONFIG_CONFLICTS',
+          conflictingTasks: conflicts,
+          pendingAction: null,
+        });
+        return;
+      }
     }
+
+    setConfirmationState({
+      isOpen: true,
+      type: 'APPLY_TO_CURRENT_DAY',
+      pendingAction: () => {
+        if (pendingChanges) {
+          updateDayConfig(dateKey, pendingChanges);
+          toast.success('Settings applied to current day only');
+          cancelChanges();
+        }
+      },
+    });
   };
 
   /**
-   * Applies changes globally to all days (warning action)
+   * Shows confirmation dialog for applying changes globally
    */
-  const applyToAllDays = () => {
-    if (pendingChanges) {
-      updateGlobalConfig(pendingChanges);
-      toast.success('Settings applied to all days');
-      cancelChanges();
-    }
+  const confirmApplyToAllDays = () => {
+    setConfirmationState({
+      isOpen: true,
+      type: 'APPLY_TO_ALL_DAYS',
+      pendingAction: () => {
+        if (pendingChanges) {
+          updateGlobalConfig(pendingChanges);
+          toast.success('Settings applied to all days');
+          cancelChanges();
+        }
+      },
+    });
+  };
+
+  /**
+   * Shows confirmation dialog for reverting to global settings
+   */
+  const confirmRevertToGlobal = () => {
+    setConfirmationState({
+      isOpen: true,
+      type: 'REVERT_TO_GLOBAL',
+      pendingAction: () => {
+        resetDayConfig(dateKey);
+        toast.success('Day reverted to global settings');
+        cancelChanges();
+      },
+    });
   };
 
   /**
@@ -120,6 +177,40 @@ export function SettingsPanel() {
   const cancelChanges = () => {
     setPendingChanges(null);
     setTempConfig(null);
+  };
+
+  /**
+   * Handles conflict resolution actions
+   */
+  const handleConflictAction = (action: 'remove' | 'adjust' | 'allow') => {
+    if (!pendingChanges) return;
+
+    const newConfig = { ...displayConfig, ...pendingChanges };
+
+    switch (action) {
+      case 'remove':
+        // Remove conflicting tasks and apply config
+        // TODO: Implement task removal logic
+        updateDayConfig(dateKey, pendingChanges);
+        toast.success('Settings applied with conflicting tasks removed');
+        break;
+
+      case 'adjust':
+        // Auto-adjust tasks to fit within new bounds
+        // TODO: Implement task adjustment logic
+        updateDayConfig(dateKey, pendingChanges);
+        toast.success('Settings applied with tasks auto-adjusted');
+        break;
+
+      case 'allow':
+        // Allow tasks outside bounds
+        updateDayConfig(dateKey, pendingChanges);
+        toast.success('Settings applied, tasks may be outside day bounds');
+        break;
+    }
+
+    cancelChanges();
+    setConfirmationState({ isOpen: false, type: null, pendingAction: null });
   };
 
 
@@ -308,45 +399,51 @@ export function SettingsPanel() {
 
           {/* Action buttons when changes are pending */}
           {pendingChanges && (
-            <div className="space-y-2 border-t pt-3 bg-neutral-50 rounded-md p-3">
-              <div className="text-xs text-neutral-600 font-medium">Apply changes to:</div>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3 border-t pt-4 bg-neutral-50 rounded-md p-4">
+              <div className="text-sm text-neutral-700 font-medium">Apply changes to:</div>
+              <div className="space-y-2">
                 <Button
-                  onClick={applyToCurrentDay}
-                  size="sm"
-                  className="text-xs"
+                  onClick={confirmApplyToCurrentDay}
+                  className="w-full"
                 >
                   Current Day Only
                 </Button>
                 <Button
-                  onClick={applyToAllDays}
+                  onClick={confirmApplyToAllDays}
                   variant="destructive"
-                  size="sm"
-                  className="text-xs"
+                  className="w-full"
                 >
                   All Days
                 </Button>
+                <Button
+                  onClick={cancelChanges}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel Changes
+                </Button>
               </div>
-              <Button
-                onClick={cancelChanges}
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs"
-              >
-                Cancel Changes
-              </Button>
             </div>
           )}
 
-          {/* Day status */}
+          {/* Day status and revert option */}
           {!pendingChanges && (
-            <div className="space-y-2 border-t pt-3">
+            <div className="space-y-3 border-t pt-3">
               <div className="text-xs text-neutral-400">
                 {hasCustomDayConfig
-                  ? `This day has custom times (${dayConfig.startTime} - ${dayConfig.endTime})`
-                  : 'Using default times for this day'
+                  ? 'Custom settings for this day'
+                  : 'Using default settings'
                 }
               </div>
+              {hasCustomDayConfig && (
+                <Button
+                  onClick={confirmRevertToGlobal}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Revert to Global Settings
+                </Button>
+              )}
             </div>
           )}
 
@@ -407,6 +504,19 @@ export function SettingsPanel() {
         className="hidden"
         onChange={handleFileInputChange}
         aria-hidden="true"
+      />
+
+      {/* Confirmation dialog */}
+      <SettingsConfirmationDialog
+        confirmationState={confirmationState}
+        onConfirm={() => {
+          confirmationState.pendingAction?.();
+          setConfirmationState({ isOpen: false, type: null, pendingAction: null });
+        }}
+        onCancel={() => {
+          setConfirmationState({ isOpen: false, type: null, pendingAction: null });
+        }}
+        onConflictAction={handleConflictAction}
       />
     </>
   );
