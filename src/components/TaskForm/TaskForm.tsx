@@ -70,18 +70,19 @@ export function TaskForm() {
       }
     }
 
-    return options.map(duration => ({
+    return options.map((duration) => ({
       value: String(duration),
-      label: duration >= 60
-        ? `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}min` : ''}`
-        : `${duration} min`
+      label:
+        duration >= 60
+          ? `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}min` : ''}`
+          : `${duration} min`,
     }));
   }, [dayConfig.interval]);
 
   // Auto-select first available duration if current one is invalid
   React.useEffect(() => {
     const currentDuration = parseInt(taskForm.taskDuration, 10);
-    const validDurations = generateDurationOptions.map(opt => parseInt(opt.value, 10));
+    const validDurations = generateDurationOptions.map((opt) => parseInt(opt.value, 10));
 
     if (currentDuration > 0 && !validDurations.includes(currentDuration)) {
       // Default to the first option (smallest interval)
@@ -90,7 +91,7 @@ export function TaskForm() {
         handleDurationChange(defaultDuration);
       }
     }
-  }, [dayConfig.interval, generateDurationOptions, handleDurationChange, taskForm.taskDuration]);
+  }, [dayConfig.interval]);
 
   /**
    * Handles task submission with loading state management
@@ -183,8 +184,8 @@ export function TaskForm() {
         <div className="space-y-3">
           {/* Duration Mode Toggle - Fixed Layout */}
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-neutral-500 flex-shrink-0">Duration Mode</Label>
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <Label className="flex-shrink-0 text-xs text-neutral-500">Duration Mode</Label>
+            <div className="flex flex-shrink-0 items-center gap-3">
               <div className="w-16 text-right">
                 <span className="text-xs text-neutral-500">
                   {taskForm.useDurationMode ? 'Duration' : 'End Time'}
@@ -207,7 +208,7 @@ export function TaskForm() {
                 type="time"
                 value={taskForm.taskStartTime}
                 onChange={(e) => handleStartTimeChange(e.target.value)}
-                className="text-sm [appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+                className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
               />
             </div>
 
@@ -237,7 +238,7 @@ export function TaskForm() {
                   type="time"
                   value={displayEndTime}
                   onChange={(e) => handleEndTimeChange(e.target.value)}
-                  className="text-sm [appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+                  className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
                 />
               )}
             </div>
