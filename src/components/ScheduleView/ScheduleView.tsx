@@ -172,7 +172,7 @@ export function ScheduleView() {
                   <motion.div
                     whileHover={{ backgroundColor: colorConfig?.bg.replace('200', '300') }}
                     whileTap={isMobile ? undefined : { backgroundColor: colorConfig?.bg.replace('200', '300') }}
-                    className={`${slot.rowSpan === 1 ? 'p-1 sm:p-2 md:py-6 md:px-3' : 'p-2 sm:p-4 md:py-8 md:px-6'} ${colorConfig?.bg} ${colorConfig?.text} flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2`}
+                    className={`${slot.rowSpan === 1 ? 'p-2 sm:p-3 md:py-4 md:px-4' : 'p-2 sm:p-4 md:py-8 md:px-6'} ${colorConfig?.bg} ${colorConfig?.text} flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2`}
                     style={{
                       minHeight: `${Math.max(slot.rowSpan * 44, 44)}px`,
                     }}

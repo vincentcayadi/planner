@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Calendar16 from '@/components/calendar-16';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
 import { timeToMinutes, minutesToTime, formatDateKey } from '@/lib/utils/time';
@@ -21,7 +23,7 @@ import { Plus } from 'lucide-react';
  * Form component for creating new tasks with time selection and validation
  */
 export function TaskForm() {
-  const { taskForm, currentDate, getDayConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
+  const { taskForm, currentDate, setCurrentDate, getDayConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dateKey = formatDateKey(currentDate);
@@ -119,18 +121,55 @@ export function TaskForm() {
           )}
         </div>
 
-        <TimeSelectionInput
+        <Calendar16
+          selectedDate={currentDate}
+          onDateSelect={setCurrentDate}
           startTime={taskForm.taskStartTime}
-          duration={durationMinutes}
-          endTime={displayEndTime}
-          useDurationMode={taskForm.useDurationMode}
-          selectedColor={taskForm.selectedColor}
-          plannerConfig={dayConfig}
           onStartTimeChange={handleStartTimeChange}
-          onDurationChange={handleDurationChange}
+          endTime={displayEndTime}
           onEndTimeChange={handleEndTimeChange}
-          onModeToggle={toggleDurationMode}
         />
+
+        {/* Duration and Mode Controls */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-neutral-500">Duration Mode</Label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="duration-mode" className="text-xs">
+                {taskForm.useDurationMode ? 'Duration' : 'End Time'}
+              </Label>
+              <Switch
+                id="duration-mode"
+                checked={taskForm.useDurationMode}
+                onCheckedChange={toggleDurationMode}
+              />
+            </div>
+          </div>
+
+          {taskForm.useDurationMode && (
+            <div>
+              <Label className="mb-1 block text-xs text-neutral-500">Duration</Label>
+              <Select
+                value={taskForm.taskDuration}
+                onValueChange={(value) => handleDurationChange(parseInt(value, 10))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="45">45 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                  <SelectItem value="180">3 hours</SelectItem>
+                  <SelectItem value="240">4 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
 
         <div>
           <Label className="text-xs text-neutral-500">Description</Label>

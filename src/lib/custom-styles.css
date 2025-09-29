@@ -1,0 +1,169 @@
+/**
+ * Custom Tailwind component classes for the planner application
+ * These classes abstract commonly repeated style patterns for better maintainability
+ */
+
+@layer components {
+  /* Typography Classes */
+  .label-text {
+    @apply text-xs text-neutral-500;
+  }
+
+  .label-text-block {
+    @apply mb-1 block text-xs text-neutral-500;
+  }
+
+  .status-text {
+    @apply text-xs text-neutral-400;
+  }
+
+  .status-text-muted {
+    @apply text-xs text-neutral-600;
+  }
+
+  .task-description {
+    @apply text-xs whitespace-pre-wrap text-neutral-700 line-clamp-2 sm:line-clamp-none md:text-sm;
+  }
+
+  /* Layout Classes */
+  .flex-center {
+    @apply flex items-center;
+  }
+
+  .flex-center-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-center-gap {
+    @apply flex items-center gap-2;
+  }
+
+  .grid-2-cols {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  /* Schedule-specific Classes */
+  .schedule-time-cell {
+    @apply flex items-center justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm;
+  }
+
+  .schedule-time-cell-start {
+    @apply flex items-start justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm;
+  }
+
+  .schedule-task-cell {
+    @apply p-2 sm:p-3 md:py-4 md:px-4 flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2;
+  }
+
+  .schedule-task-cell-large {
+    @apply p-2 sm:p-4 md:py-8 md:px-6 flex cursor-pointer flex-col items-center justify-center gap-1 text-center transition-colors md:gap-2;
+  }
+
+  .schedule-available-cell {
+    @apply flex min-h-[44px] items-center justify-between bg-neutral-50 px-2 py-2 text-sm text-neutral-400 transition-colors duration-300 group-hover:bg-neutral-200 sm:px-3 sm:py-3 md:px-4 md:py-4;
+  }
+
+  /* Form Input Classes */
+  .time-input {
+    @apply appearance-none pl-8 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none;
+  }
+
+  .time-input-clean {
+    @apply text-sm [&::-webkit-calendar-picker-indicator]:hidden;
+  }
+
+  .time-input-settings {
+    @apply [appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none;
+  }
+
+  /* Button Classes */
+  .action-button {
+    @apply w-full text-xs transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Status and Feedback Classes */
+  .loading-indicator {
+    @apply flex items-center gap-2;
+  }
+
+  .loading-indicator-sm {
+    @apply flex items-center gap-1 text-xs;
+  }
+
+  .saving-status {
+    @apply rounded-lg bg-blue-50 p-3 border border-blue-200;
+  }
+
+  .saving-status-text {
+    @apply text-sm text-blue-800;
+  }
+
+  .saving-status-inline {
+    @apply flex items-center gap-1 text-xs text-blue-600;
+  }
+
+  /* Card and Content Classes */
+  .settings-section {
+    @apply space-y-3 border-t pt-3;
+  }
+
+  .conflict-item {
+    @apply flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2;
+  }
+
+  .conflict-item-name {
+    @apply text-sm font-medium;
+  }
+
+  .conflict-item-time {
+    @apply text-xs text-neutral-600;
+  }
+
+  /* Task List Classes */
+  .task-item-content {
+    @apply flex-1 min-w-0;
+  }
+
+  .task-item-name {
+    @apply font-medium text-sm truncate;
+  }
+
+  .task-item-time {
+    @apply text-xs text-neutral-600;
+  }
+
+  .task-item-description {
+    @apply text-xs text-neutral-500 line-clamp-2 mt-1;
+  }
+
+  /* Color Selection Grid */
+  .color-grid {
+    @apply grid grid-cols-4 gap-2;
+  }
+
+  .color-button {
+    @apply h-8 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105;
+  }
+
+  .color-button-selected {
+    @apply ring-2 ring-neutral-400 ring-offset-2;
+  }
+
+  /* Background Patterns */
+  .gradient-background {
+    @apply bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))];
+  }
+
+  .header-background {
+    @apply bg-white/80 backdrop-blur-sm border-b border-white/20;
+  }
+
+  /* Mobile-specific Classes */
+  .mobile-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .mobile-menu-button {
+    @apply h-14 w-14 rounded-full bg-white shadow-lg border-2 border-neutral-200 hover:bg-neutral-50 hover:shadow-xl transition-all duration-200;
+  }
+}

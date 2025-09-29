@@ -224,6 +224,95 @@ TTL: 24 hours
 - Input validation at all layers
 - Regular security reviews
 
+### ADR-008: Calendar-16 Integration Strategy (September 2025)
+**Status**: 🗓️ In Progress
+**Date**: 2025-09-30
+
+#### Context
+The existing task creation flow uses separate components for date selection (Calendar) and time selection (TimeSelectionInput). The new calendar-16 component provides a unified date + time picker that can reduce UI complexity and improve mobile experience.
+
+#### Current State Analysis
+- **TaskForm Component**: Uses separate calendar and TimeSelectionInput
+- **Page Layout**: Desktop sidebar with separate calendar card + task form
+- **Mobile Experience**: Multiple inputs create cluttered interface
+- **calendar-16 Component**: Provides date + start/end time in unified interface
+
+#### Integration Options
+1. **Replace TaskForm Time Inputs** (Recommended)
+   - Replace TimeSelectionInput with calendar-16 time inputs
+   - Keep separate calendar for date navigation
+   - Pros: Minimal disruption, focused improvement
+   - Cons: Still separate date/time components
+
+2. **Unified Calendar-16 in TaskForm** (Chosen)
+   - Replace both calendar and time inputs with calendar-16
+   - Single component for date + time selection
+   - Pros: Consistent UX, reduced clutter, better mobile experience
+   - Cons: Larger refactoring effort
+
+3. **Calendar-16 as Primary Interface**
+   - Make calendar-16 the main interaction point
+   - Move task form below calendar
+   - Pros: Natural workflow, prominent date/time selection
+   - Cons: Major layout changes
+
+#### Decision
+Implementing **Option 2: Unified Calendar-16 in TaskForm** because:
+- Maintains existing layout structure
+- Provides immediate UX improvement
+- Reduces component complexity
+- Better mobile experience
+- Consistent date/time selection interface
+
+---
+
+### ADR-009: Global Settings Architecture (September 2025)
+**Status**: 🗓️ In Progress
+**Date**: 2025-09-30
+
+#### Context
+Current settings system uses action buttons ("Apply to Current Day", "Apply to All Days") which creates friction in the user experience. Users want immediate feedback when making changes and clearer distinction between global defaults and per-day customizations.
+
+#### Current Issues
+1. **Friction**: Confirmation buttons slow down workflow
+2. **Confusion**: Unclear when settings are global vs per-day
+3. **Mobile UX**: Settings panel cramped on mobile
+4. **Feedback**: No immediate indication of changes
+
+#### New Design Principles
+1. **Auto-save**: Immediate saves with toast feedback
+2. **Clear Hierarchy**: Global settings in dedicated modal
+3. **Visual Indicators**: Clear global vs custom status
+4. **Mobile-First**: Responsive settings interface
+
+#### Implementation Strategy
+```typescript
+// Auto-save with debouncing
+const useAutoSaveSettings = (dateKey: string) => {
+  const debouncedSave = useMemo(
+    () => debounce((changes: Partial<DayConfig>) => {
+      updateDayConfig(dateKey, changes);
+      toast.success('Settings updated');
+    }, 300),
+    [dateKey]
+  );
+};
+
+// Global settings modal
+const GlobalSettingsDialog = ({ open, onOpenChange }) => {
+  // Dedicated interface for global defaults
+  // Clear separation from per-day overrides
+};
+```
+
+#### Benefits
+- Smoother user experience
+- Clear mental model of settings hierarchy
+- Better mobile experience
+- Immediate feedback on changes
+
+---
+
 ## Future Decisions Needed
 
 ### 1. Cross-Midnight Task Handling

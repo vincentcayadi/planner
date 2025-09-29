@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Toaster } from '@/components/ui/sonner';
 import { TaskForm } from '@/components/TaskForm/TaskForm';
@@ -12,15 +11,17 @@ import { SettingsPanel } from '@/components/SettingsPanel/SettingsPanel';
 import { ConflictDialog } from '@/components/Dialogs/ConflictDialog';
 import { EditTaskDialog } from '@/components/Dialogs/EditTaskDialog';
 import { ClearAllDialog } from '@/components/Dialogs/ClearAllDialog';
+import { GlobalSettingsDialog } from '@/components/Dialogs/GlobalSettingsDialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PlannerPage() {
   const { currentDate, setCurrentDate, isLoading, loadFromStorage } = usePlannerStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
 
   // Load data from storage on mount
   useEffect(() => {
@@ -66,6 +67,30 @@ export default function PlannerPage() {
   return (
     <>
       <div className="h-full overflow-hidden bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
+        {/* Header with Global Settings */}
+        <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-semibold text-neutral-800">Daily Planner</h1>
+            <div className="text-sm text-neutral-600">
+              {currentDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </div>
+          </div>
+          <Button
+            onClick={() => setIsGlobalSettingsOpen(true)}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden lg:inline">Global Settings</span>
+          </Button>
+        </header>
+
         {/* Mobile Menu Button */}
         <div className="md:hidden fixed bottom-6 right-6 z-50">
           <Button
@@ -80,23 +105,10 @@ export default function PlannerPage() {
         <div className="flex h-full">
           {/* Desktop Sidebar */}
           <aside className="hidden md:flex w-80 flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg">
-            {/* Calendar */}
-            <Card className="gap-0 py-3">
-              <CardContent className="flex justify-center pt-0">
-                <Calendar
-                  mode="single"
-                  selected={currentDate}
-                  onSelect={(date) => date && setCurrentDate(date)}
-                  weekStartsOn={1}
-                  className="rounded-md border-0"
-                />
-              </CardContent>
-            </Card>
-
             {/* Settings Panel */}
             <SettingsPanel />
 
-            {/* Task Form */}
+            {/* Task Form with integrated calendar */}
             <TaskForm />
 
             {/* Task List */}
@@ -141,28 +153,10 @@ export default function PlannerPage() {
                     </Button>
                   </div>
 
-                  {/* Calendar */}
-                  <Card className="gap-0 py-3">
-                    <CardContent className="flex justify-center pt-0">
-                      <Calendar
-                        mode="single"
-                        selected={currentDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setCurrentDate(date);
-                            setIsSidebarOpen(false); // Close sidebar after date selection
-                          }
-                        }}
-                        weekStartsOn={1}
-                        className="rounded-md border-0"
-                      />
-                    </CardContent>
-                  </Card>
-
                   {/* Settings Panel */}
                   <SettingsPanel />
 
-                  {/* Task Form */}
+                  {/* Task Form with integrated calendar */}
                   <TaskForm />
 
                   {/* Task List */}
@@ -189,6 +183,10 @@ export default function PlannerPage() {
       <ConflictDialog />
       <EditTaskDialog />
       <ClearAllDialog />
+      <GlobalSettingsDialog
+        open={isGlobalSettingsOpen}
+        onOpenChange={setIsGlobalSettingsOpen}
+      />
 
       {/* Toast notifications */}
       <Toaster richColors position="top-right" />

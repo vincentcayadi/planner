@@ -66,8 +66,7 @@ export function EditTaskDialog() {
   const updateEditItem = (updates: Partial<Task>) => {
     if (!editDialog.editItem) return;
 
-    const { editDialog: currentEditDialog } = usePlannerStore.getState();
-    const updatedItem = { ...currentEditDialog.editItem!, ...updates };
+    const updatedItem = { ...editDialog.editItem, ...updates };
 
     usePlannerStore.setState((state) => ({
       editDialog: {

@@ -21,6 +21,7 @@ import type { PlannerExport, DayConfig, Task } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload } from 'lucide-react';
+import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
 import { SettingsConfirmationDialog, type ConfirmationType } from '@/components/Dialogs/SettingsConfirmationDialog';
 
 // File System Access API types
@@ -59,9 +60,16 @@ export function SettingsPanel() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Pending changes state for action buttons
-  const [pendingChanges, setPendingChanges] = useState<Partial<DayConfig> | null>(null);
-  const [tempConfig, setTempConfig] = useState<DayConfig | null>(null);
+  // Auto-save functionality
+  const { save: autoSaveDayConfig, isSaving: isSavingDayConfig } = useAutoSave(
+    (config: DayConfig) => {
+      updateDayConfig(dateKey, config);
+      toast.success('Day settings updated', {
+        description: 'Custom settings applied to this day only',
+      });
+    },
+    DEBOUNCE_DELAYS.STANDARD
+  );
 
   // Confirmation dialog state
   const [confirmationState, setConfirmationState] = useState<{
@@ -91,92 +99,48 @@ export function SettingsPanel() {
   const dayConfig = getDayConfig(dateKey);
   const hasCustomDayConfig = JSON.stringify(dayConfig) !== JSON.stringify(globalConfig);
 
-  // Use temp config if available, otherwise use actual day config
-  const displayConfig = tempConfig || dayConfig;
+  const [localConfig, setLocalConfig] = useState<DayConfig>(dayConfig);
+
+  // Sync local config when date changes
+  React.useEffect(() => {
+    setLocalConfig(dayConfig);
+  }, [dateKey, dayConfig]);
 
   // Check for File System Access API support
   const w: FSWin | undefined = typeof window !== 'undefined' ? (window as FSWin) : undefined;
   const supportsFileSystemAPI = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
   /**
-   * Handles input changes and shows action buttons for confirmation
+   * Handles input changes with auto-save
    */
   const handleConfigChange = (config: Partial<DayConfig>) => {
-    const newConfig = { ...displayConfig, ...config };
-    setTempConfig(newConfig);
-    setPendingChanges({ ...pendingChanges, ...config });
-  };
+    const newConfig = { ...localConfig, ...config };
+    setLocalConfig(newConfig);
 
-  /**
-   * Shows confirmation dialog for applying changes to current day
-   */
-  const confirmApplyToCurrentDay = () => {
-    if (pendingChanges) {
-      const newConfig = { ...displayConfig, ...pendingChanges };
-      const conflicts = checkDayConfigConflicts(dateKey, newConfig);
+    // Check for conflicts before saving
+    const conflicts = checkDayConfigConflicts(dateKey, newConfig);
 
-      if (conflicts.length > 0) {
-        setConfirmationState({
-          isOpen: true,
-          type: 'DAY_CONFIG_CONFLICTS',
-          conflictingTasks: conflicts,
-          pendingAction: null,
-        });
-        return;
-      }
+    if (conflicts.length > 0) {
+      setConfirmationState({
+        isOpen: true,
+        type: 'DAY_CONFIG_CONFLICTS',
+        conflictingTasks: conflicts,
+        pendingAction: () => autoSaveDayConfig(newConfig),
+      });
+      return;
     }
 
-    setConfirmationState({
-      isOpen: true,
-      type: 'APPLY_TO_CURRENT_DAY',
-      pendingAction: () => {
-        if (pendingChanges) {
-          updateDayConfig(dateKey, pendingChanges);
-          toast.success('Settings applied to current day only');
-          cancelChanges();
-        }
-      },
-    });
+    // Auto-save if no conflicts
+    autoSaveDayConfig(newConfig);
   };
 
   /**
-   * Shows confirmation dialog for applying changes globally
+   * Handle revert to global settings
    */
-  const confirmApplyToAllDays = () => {
-    setConfirmationState({
-      isOpen: true,
-      type: 'APPLY_TO_ALL_DAYS',
-      pendingAction: () => {
-        if (pendingChanges) {
-          updateGlobalConfig(pendingChanges);
-          toast.success('Settings applied to all days');
-          cancelChanges();
-        }
-      },
-    });
-  };
-
-  /**
-   * Shows confirmation dialog for reverting to global settings
-   */
-  const confirmRevertToGlobal = () => {
-    setConfirmationState({
-      isOpen: true,
-      type: 'REVERT_TO_GLOBAL',
-      pendingAction: () => {
-        resetDayConfig(dateKey);
-        toast.success('Day reverted to global settings');
-        cancelChanges();
-      },
-    });
-  };
-
-  /**
-   * Cancels pending changes and reverts to actual config
-   */
-  const cancelChanges = () => {
-    setPendingChanges(null);
-    setTempConfig(null);
+  const handleRevertToGlobal = () => {
+    resetDayConfig(dateKey);
+    setLocalConfig(globalConfig);
+    toast.success('Day reverted to global settings');
   };
 
   /**
@@ -209,7 +173,6 @@ export function SettingsPanel() {
         break;
     }
 
-    cancelChanges();
     setConfirmationState({ isOpen: false, type: null, pendingAction: null });
   };
 
@@ -364,7 +327,7 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">Start</Label>
               <Input
                 type="time"
-                value={displayConfig.startTime}
+                value={localConfig.startTime}
                 onChange={(e) => handleConfigChange({ startTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
@@ -373,7 +336,7 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">End</Label>
               <Input
                 type="time"
-                value={displayConfig.endTime}
+                value={localConfig.endTime}
                 onChange={(e) => handleConfigChange({ endTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
@@ -383,7 +346,7 @@ export function SettingsPanel() {
           <div>
             <Label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</Label>
             <Select
-              value={String(displayConfig.interval)}
+              value={String(localConfig.interval)}
               onValueChange={(v) => handleConfigChange({ interval: Number(v) })}
             >
               <SelectTrigger className="w-full">
@@ -397,55 +360,47 @@ export function SettingsPanel() {
             </Select>
           </div>
 
-          {/* Action buttons when changes are pending */}
-          {pendingChanges && (
-            <div className="space-y-3 border-t pt-4 bg-neutral-50 rounded-md p-4">
-              <div className="text-sm text-neutral-700 font-medium">Apply changes to:</div>
-              <div className="space-y-2">
-                <Button
-                  onClick={confirmApplyToCurrentDay}
-                  className="w-full"
-                >
-                  Current Day Only
-                </Button>
-                <Button
-                  onClick={confirmApplyToAllDays}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  All Days
-                </Button>
-                <Button
-                  onClick={cancelChanges}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancel Changes
-                </Button>
+          {/* Auto-save status indicator */}
+          {isSavingDayConfig && (
+            <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+              <div className="flex items-center gap-2">
+                <LoadingSpinner size="sm" />
+                <span className="text-sm text-blue-800">Saving changes...</span>
               </div>
             </div>
           )}
 
           {/* Day status and revert option */}
-          {!pendingChanges && (
-            <div className="space-y-3 border-t pt-3">
+          <div className="space-y-3 border-t pt-3">
+            <div className="flex items-center justify-between">
               <div className="text-xs text-neutral-400">
                 {hasCustomDayConfig
                   ? 'Custom settings for this day'
-                  : 'Using default settings'
+                  : 'Using global defaults'
                 }
               </div>
-              {hasCustomDayConfig && (
-                <Button
-                  onClick={confirmRevertToGlobal}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Revert to Global Settings
-                </Button>
+              {isSavingDayConfig && (
+                <div className="flex items-center gap-1 text-xs text-blue-600">
+                  <LoadingSpinner size="sm" />
+                  <span>Saving...</span>
+                </div>
               )}
             </div>
-          )}
+            {hasCustomDayConfig && (
+              <Button
+                onClick={() => {
+                  resetDayConfig(dateKey);
+                  setLocalConfig(globalConfig);
+                  toast.success('Day reverted to global settings');
+                }}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                Revert to Global Settings
+              </Button>
+            )}
+          </div>
 
           <div>
             <Label className="mb-2 block text-xs text-neutral-500">Data Management</Label>
