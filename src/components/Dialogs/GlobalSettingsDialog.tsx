@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,8 +21,6 @@ import { usePlannerStore } from '@/stores/plannerStore';
 import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Save, RotateCcw } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import type { PlannerConfig } from '@/lib/types';
 
 interface GlobalSettingsDialogProps {
@@ -74,18 +71,19 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="max-h-[90vh] overflow-y-auto p-6 sm:max-w-md">
         <DialogHeader className="space-y-3">
           <DialogTitle>Global Settings</DialogTitle>
           <DialogDescription>
-            Configure default settings for all days. Days with custom settings will remain unchanged.
+            Configure default settings for all days. Days with custom settings will remain
+            unchanged.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Current Status */}
           <div className="rounded-lg bg-neutral-50 p-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-neutral-700">Status</span>
               {isSaving && (
                 <div className="flex items-center gap-2 text-xs text-neutral-600">
@@ -97,7 +95,8 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
             <div className="text-xs text-neutral-600">
               {customDaysCount > 0 ? (
                 <>
-                  {customDaysCount} day{customDaysCount !== 1 ? 's' : ''} have custom settings that won&apos;t be affected
+                  {customDaysCount} day{customDaysCount !== 1 ? 's' : ''} have custom settings that
+                  won&apos;t be affected
                 </>
               ) : (
                 'These settings will apply to all days'
@@ -143,31 +142,9 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
                 <SelectItem value="60">60 minutes</SelectItem>
               </SelectContent>
             </Select>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-2 text-xs text-neutral-500">
               Controls the time grid granularity for new schedules
             </p>
-          </div>
-
-          <Separator />
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-3">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset to Defaults
-            </Button>
-            <Button
-              onClick={() => onOpenChange(false)}
-              size="sm"
-              className="flex-1"
-            >
-              Done
-            </Button>
           </div>
         </div>
       </DialogContent>
