@@ -160,7 +160,7 @@ export function TaskForm() {
             <Button
               onClick={handleAddTask}
               disabled={isSubmitting || !taskForm.taskName.trim()}
-              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50"
+              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
