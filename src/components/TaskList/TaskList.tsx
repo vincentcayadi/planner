@@ -366,9 +366,20 @@ export function TaskList() {
                     <span className="flex items-center justify-center gap-1">
                       <span>⚠️ Link expired</span>
                     </span>
-                  ) : (
-                    `Shared ${new Date(existingShare.createdAt).toLocaleDateString()}`
-                  )}
+                  ) : (() => {
+                    const expiryTime = new Date(existingShare.createdAt).getTime() + (24 * 60 * 60 * 1000);
+                    const timeRemaining = expiryTime - Date.now();
+                    const hoursRemaining = Math.floor(timeRemaining / (60 * 60 * 1000));
+                    const minutesRemaining = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
+
+                    if (hoursRemaining > 0) {
+                      return `Expires in ${hoursRemaining}h ${minutesRemaining}m`;
+                    } else if (minutesRemaining > 0) {
+                      return `Expires in ${minutesRemaining}m`;
+                    } else {
+                      return `Expires soon`;
+                    }
+                  })()}
                 </p>
               </div>
             )}

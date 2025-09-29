@@ -190,7 +190,7 @@ export function TimeSelectionInput({
       {/* Mode Toggle */}
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Time</Label>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 [animation:none]">
           <Label htmlFor="duration-mode" className="text-sm text-neutral-600">
             {useDurationMode ? 'Duration' : 'End time'}
           </Label>
