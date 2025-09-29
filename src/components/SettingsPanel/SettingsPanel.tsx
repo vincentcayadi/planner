@@ -1,11 +1,11 @@
 // src/components/SettingsPanel/SettingsPanel.tsx
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import Calendar16 from '@/components/calendar-16';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -20,9 +20,13 @@ import { toast } from 'sonner';
 import type { PlannerExport, DayConfig, Task } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Settings } from 'lucide-react';
 import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
-import { SettingsConfirmationDialog, type ConfirmationType } from '@/components/Dialogs/SettingsConfirmationDialog';
+import {
+  SettingsConfirmationDialog,
+  type ConfirmationType,
+} from '@/components/Dialogs/SettingsConfirmationDialog';
+import { GlobalSettingsDialog } from '@/components/Dialogs/GlobalSettingsDialog';
 
 // File System Access API types
 interface FilePickerOptions {
@@ -59,8 +63,8 @@ export function SettingsPanel() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
 
-  // Auto-save functionality
   // Auto-save functionality
   const { save: autoSaveDayConfig, isSaving: isSavingDayConfig } = useAutoSave(
     (config: DayConfig) => {
@@ -86,6 +90,7 @@ export function SettingsPanel() {
 
   const {
     currentDate,
+    setCurrentDate,
     globalConfig,
     getDayConfig,
     updateGlobalConfig,
@@ -93,7 +98,7 @@ export function SettingsPanel() {
     resetDayConfig,
     exportData,
     importData,
-    checkDayConfigConflicts
+    checkDayConfigConflicts,
   } = usePlannerStore();
 
   const dateKey = formatDateKey(currentDate);
@@ -176,7 +181,6 @@ export function SettingsPanel() {
     setConfirmationState({ isOpen: false, type: null, pendingAction: null });
   };
 
-
   const handleExportData = async () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -186,42 +190,42 @@ export function SettingsPanel() {
       const json = JSON.stringify(exportPayload, null, 2);
       const filename = `planner-export-${formatDateKey(new Date())}.json`;
 
-    try {
-      if (supportsFileSystemAPI && w?.showSaveFilePicker) {
-        const handle = await w.showSaveFilePicker({
-          suggestedName: filename,
-          types: [
-            {
-              description: 'JSON Files',
-              accept: { 'application/json': ['.json'] },
-            },
-          ],
-        });
+      try {
+        if (supportsFileSystemAPI && w?.showSaveFilePicker) {
+          const handle = await w.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: 'JSON Files',
+                accept: { 'application/json': ['.json'] },
+              },
+            ],
+          });
 
-        const writable = await handle.createWritable();
-        await writable.write(new Blob([json], { type: 'application/json' }));
-        await writable.close();
+          const writable = await handle.createWritable();
+          await writable.write(new Blob([json], { type: 'application/json' }));
+          await writable.close();
 
-        toast.success('Export successful', {
-          description: 'Data has been saved to your device',
-        });
-        return;
+          toast.success('Export successful', {
+            description: 'Data has been saved to your device',
+          });
+          return;
+        }
+      } catch (error) {
+        // Fall back to download if File System API fails
+        console.warn('File System API failed, falling back to download:', error);
       }
-    } catch (error) {
-      // Fall back to download if File System API fails
-      console.warn('File System API failed, falling back to download:', error);
-    }
 
-    // Fallback: traditional download
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      // Fallback: traditional download
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
       toast.success('Export downloaded', {
         description: 'Check your downloads folder',
@@ -318,29 +322,17 @@ export function SettingsPanel() {
   return (
     <>
       <Card className="gap-0">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Settings</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-3 pt-0">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="label-text-block">Start</Label>
-              <Input
-                type="time"
-                value={localConfig.startTime}
-                onChange={(e) => handleConfigChange({ startTime: e.target.value })}
-                className="time-input-settings"
-              />
-            </div>
-            <div>
-              <Label className="label-text-block">End</Label>
-              <Input
-                type="time"
-                value={localConfig.endTime}
-                onChange={(e) => handleConfigChange({ endTime: e.target.value })}
-                className="time-input-settings"
-              />
-            </div>
+          <div className="flex justify-center">
+            <Calendar16
+              selectedDate={currentDate}
+              onDateSelect={setCurrentDate}
+              startTime={localConfig.startTime}
+              onStartTimeChange={(time) => handleConfigChange({ startTime: time })}
+              endTime={localConfig.endTime}
+              onEndTimeChange={(time) => handleConfigChange({ endTime: time })}
+              className="w-full border-none shadow-none"
+            />
           </div>
 
           <div>
@@ -360,45 +352,8 @@ export function SettingsPanel() {
             </Select>
           </div>
 
-          {/* Auto-save status indicator */}
-          {isSavingDayConfig && (
-            <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
-              <div className="loading-indicator">
-                <LoadingSpinner size="sm" />
-                <span className="text-sm text-blue-800">Saving changes...</span>
-              </div>
-            </div>
-          )}
-
-          {/* Day status and revert option */}
+          {/* Data Management */}
           <div className="space-y-3 border-t pt-3">
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-neutral-400">
-                {hasCustomDayConfig
-                  ? 'Custom settings for this day'
-                  : 'Using global defaults'
-                }
-              </div>
-              {isSavingDayConfig && (
-                <div className="loading-indicator-sm text-blue-600">
-                  <LoadingSpinner size="sm" />
-                  <span>Saving...</span>
-                </div>
-              )}
-            </div>
-            {hasCustomDayConfig && (
-              <Button
-                onClick={handleRevertToGlobal}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                Revert to Global Settings
-              </Button>
-            )}
-          </div>
-
-          <div>
             <Label className="label-text-block">Data Management</Label>
             <div className="grid grid-cols-2 gap-2">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -442,7 +397,30 @@ export function SettingsPanel() {
                 </Button>
               </motion.div>
             </div>
-            <p className="mt-1 status-text">Backup and restore your schedules</p>
+            <p className="status-text mt-1">Backup and restore your schedules</p>
+          </div>
+
+          {/* Global Actions */}
+          <div className="space-y-2 border-t pt-3">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={() => setIsGlobalSettingsOpen(true)}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </motion.div>
+            {hasCustomDayConfig && (
+              <Button
+                onClick={handleRevertToGlobal}
+                variant="ghost"
+                size="sm"
+                className="w-full"
+              >
+                Revert to Global Settings
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -468,6 +446,12 @@ export function SettingsPanel() {
           setConfirmationState({ isOpen: false, type: null, pendingAction: null });
         }}
         onConflictAction={handleConflictAction}
+      />
+
+      {/* Global Settings Dialog */}
+      <GlobalSettingsDialog
+        open={isGlobalSettingsOpen}
+        onOpenChange={setIsGlobalSettingsOpen}
       />
     </>
   );

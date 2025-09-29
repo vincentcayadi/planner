@@ -11,17 +11,15 @@ import { SettingsPanel } from '@/components/SettingsPanel/SettingsPanel';
 import { ConflictDialog } from '@/components/Dialogs/ConflictDialog';
 import { EditTaskDialog } from '@/components/Dialogs/EditTaskDialog';
 import { ClearAllDialog } from '@/components/Dialogs/ClearAllDialog';
-import { GlobalSettingsDialog } from '@/components/Dialogs/GlobalSettingsDialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Settings } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PlannerPage() {
   const { currentDate, setCurrentDate, isLoading, loadFromStorage } = usePlannerStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
 
   // Load data from storage on mount
   useEffect(() => {
@@ -67,29 +65,6 @@ export default function PlannerPage() {
   return (
     <>
       <div className="h-full overflow-hidden bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
-        {/* Header with Global Settings */}
-        <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold text-neutral-800">Daily Planner</h1>
-            <div className="text-sm text-neutral-600">
-              {currentDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </div>
-          </div>
-          <Button
-            onClick={() => setIsGlobalSettingsOpen(true)}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden lg:inline">Global Settings</span>
-          </Button>
-        </header>
 
         {/* Mobile Menu Button */}
         <div className="md:hidden fixed bottom-6 right-6 z-50">
@@ -181,7 +156,7 @@ export default function PlannerPage() {
 
           {/* Main Content */}
           <motion.main
-            className="flex-1 overflow-hidden p-3 md:p-6"
+            className="flex-1 overflow-y-auto p-3 md:p-6"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.1}
@@ -196,10 +171,6 @@ export default function PlannerPage() {
       <ConflictDialog />
       <EditTaskDialog />
       <ClearAllDialog />
-      <GlobalSettingsDialog
-        open={isGlobalSettingsOpen}
-        onOpenChange={setIsGlobalSettingsOpen}
-      />
 
       {/* Toast notifications */}
       <Toaster richColors position="top-right" />

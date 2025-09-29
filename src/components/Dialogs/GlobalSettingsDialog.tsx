@@ -162,6 +162,7 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
             </Button>
             <Button
               onClick={() => onOpenChange(false)}
+              size="sm"
               className="flex-1"
             >
               Done

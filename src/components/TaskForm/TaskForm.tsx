@@ -8,8 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Calendar16 from '@/components/calendar-16';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
 import { timeToMinutes, minutesToTime, formatDateKey } from '@/lib/utils/time';
@@ -23,7 +28,15 @@ import { Plus } from 'lucide-react';
  * Form component for creating new tasks with time selection and validation
  */
 export function TaskForm() {
-  const { taskForm, currentDate, setCurrentDate, getDayConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
+  const {
+    taskForm,
+    currentDate,
+    setCurrentDate,
+    getDayConfig,
+    updateTaskForm,
+    addTask,
+    resetTaskForm,
+  } = usePlannerStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dateKey = formatDateKey(currentDate);
@@ -121,23 +134,17 @@ export function TaskForm() {
           )}
         </div>
 
-        <Calendar16
-          selectedDate={currentDate}
-          onDateSelect={setCurrentDate}
-          startTime={taskForm.taskStartTime}
-          onStartTimeChange={handleStartTimeChange}
-          endTime={displayEndTime}
-          onEndTimeChange={handleEndTimeChange}
-        />
-
-        {/* Duration and Mode Controls */}
+        {/* Task Time Selection - Stable Layout */}
         <div className="space-y-3">
+          {/* Duration Mode Toggle - Fixed Layout */}
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-neutral-500">Duration Mode</Label>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="duration-mode" className="text-xs">
-                {taskForm.useDurationMode ? 'Duration' : 'End Time'}
-              </Label>
+            <Label className="text-xs text-neutral-500 flex-shrink-0">Duration Mode</Label>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="w-16 text-right">
+                <span className="text-xs text-neutral-500">
+                  {taskForm.useDurationMode ? 'Duration' : 'End Time'}
+                </span>
+              </div>
               <Switch
                 id="duration-mode"
                 checked={taskForm.useDurationMode}
@@ -146,29 +153,53 @@ export function TaskForm() {
             </div>
           </div>
 
-          {taskForm.useDurationMode && (
-            <div>
-              <Label className="mb-1 block text-xs text-neutral-500">Duration</Label>
-              <Select
-                value={taskForm.taskDuration}
-                onValueChange={(value) => handleDurationChange(parseInt(value, 10))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="45">45 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="90">1.5 hours</SelectItem>
-                  <SelectItem value="120">2 hours</SelectItem>
-                  <SelectItem value="180">3 hours</SelectItem>
-                  <SelectItem value="240">4 hours</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Time Inputs - Stable Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Start Time - Always Present */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs text-neutral-500">Start</Label>
+              <Input
+                type="time"
+                value={taskForm.taskStartTime}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                className="text-sm [appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+              />
             </div>
-          )}
+
+            {/* Duration or End Time - Same Container */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs text-neutral-500">
+                {taskForm.useDurationMode ? 'Duration' : 'End'}
+              </Label>
+              {taskForm.useDurationMode ? (
+                <Select
+                  value={taskForm.taskDuration}
+                  onValueChange={(value) => handleDurationChange(parseInt(value, 10))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="90">1.5 hours</SelectItem>
+                    <SelectItem value="120">2 hours</SelectItem>
+                    <SelectItem value="180">3 hours</SelectItem>
+                    <SelectItem value="240">4 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type="time"
+                  value={displayEndTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  className="text-sm [appearance:textfield] pr-3 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         <div>
@@ -204,7 +235,7 @@ export function TaskForm() {
             <Button
               onClick={handleAddTask}
               disabled={isSubmitting || !taskForm.taskName.trim()}
-              className="w-full transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
