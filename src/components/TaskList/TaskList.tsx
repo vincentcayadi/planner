@@ -103,9 +103,14 @@ export function TaskList() {
       // Clean up old link to prevent Redis bloat
       if (existingShare?.id) {
         try {
-          await fetch(`/api/share/${existingShare.id}`, {
+          const deleteResponse = await fetch(`/api/share/${existingShare.id}`, {
             method: 'DELETE',
           });
+
+          if (!deleteResponse.ok) {
+            const errorText = await deleteResponse.text();
+            console.warn('Failed to delete old share link:', deleteResponse.status, errorText);
+          }
         } catch (error) {
           // Continue even if deletion fails - don't block new link creation
           console.warn('Failed to delete old share link:', error);
