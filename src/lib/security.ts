@@ -17,6 +17,9 @@ class RateLimit {
     const now = Date.now();
     const windowStart = now - this.windowMs;
 
+    // Auto-cleanup on each request to prevent memory leaks
+    this.cleanup();
+
     // Get existing requests for this key
     const requests = this.requests.get(key) || [];
 
@@ -63,8 +66,52 @@ class RateLimit {
 // Create rate limiter: 10 requests per 15 minutes
 export const shareRateLimit = new RateLimit(10, 15 * 60 * 1000);
 
-// Clean up rate limit entries every 30 minutes
-setInterval(() => shareRateLimit.cleanup(), 30 * 60 * 1000);
+// Clean up rate limit entries on each request (no memory leak)
+// In serverless environments, setInterval creates persistent timers that cause memory leaks
+
+// Secure client IP extraction
+export function getClientIP(req: Request): string {
+  // Get forwarded IPs and validate them
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+
+  // In production, only trust specific proxy headers from known sources
+  if (process.env.NODE_ENV === 'production') {
+    // For Vercel, x-forwarded-for is trusted
+    // For other hosts, you may need to configure this differently
+    const trustedIP = forwardedFor?.split(',')[0]?.trim();
+    if (trustedIP && isValidIPAddress(trustedIP)) {
+      return trustedIP;
+    }
+  }
+
+  // Development or fallback: try multiple headers
+  const possibleIPs = [
+    forwardedFor?.split(',')[0]?.trim(),
+    realIP,
+    req.headers.get('cf-connecting-ip'), // Cloudflare
+    req.headers.get('x-client-ip'),
+  ].filter(Boolean);
+
+  for (const ip of possibleIPs) {
+    if (ip && isValidIPAddress(ip)) {
+      return ip;
+    }
+  }
+
+  return 'anonymous';
+}
+
+// Validate IP address format
+function isValidIPAddress(ip: string): boolean {
+  // IPv4 regex
+  const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+  // IPv6 regex (simplified)
+  const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+
+  return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+}
 
 // Generate secure random ID
 export function generateSecureId(): string {

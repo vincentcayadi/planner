@@ -1,7 +1,7 @@
 // src/app/api/share/[id]/route.ts
 import { NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
-import { CSP_HEADERS } from '@/lib/security';
+import { CSP_HEADERS, getClientIP } from '@/lib/security';
 import { isValidTaskId } from '@/lib/types';
 import { shareRateLimit } from '@/lib/security';
 
@@ -24,8 +24,7 @@ export async function GET(req: Request, { params }: Ctx): Promise<NextResponse> 
     }
 
     // Rate limiting
-    const clientIP =
-      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'anonymous';
+    const clientIP = getClientIP(req);
 
     const rateLimitResult = shareRateLimit.check(clientIP);
 
@@ -51,7 +50,7 @@ export async function GET(req: Request, { params }: Ctx): Promise<NextResponse> 
     }
 
     // Remove sensitive metadata before returning
-    const { createdBy, ...publicData } = data as any;
+    const { createdBy, ...publicData } = data as Record<string, unknown>;
 
     return NextResponse.json(publicData, { headers });
   } catch (error) {
@@ -81,8 +80,7 @@ export async function DELETE(req: Request, { params }: Ctx): Promise<NextRespons
     }
 
     // Rate limiting
-    const clientIP =
-      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'anonymous';
+    const clientIP = getClientIP(req);
 
     const rateLimitResult = shareRateLimit.check(clientIP);
 

@@ -80,7 +80,7 @@ export function SettingsPanel() {
           ],
         });
 
-        const writable = await (handle as any).createWritable();
+        const writable = await handle.createWritable();
         await writable.write(new Blob([json], { type: 'application/json' }));
         await writable.close();
 
@@ -130,7 +130,7 @@ export function SettingsPanel() {
             ],
           });
 
-          const file = await (handle as any).getFile();
+          const file = await handle.getFile();
           const text = await file.text();
           const data = JSON.parse(text) as PlannerExport;
 
