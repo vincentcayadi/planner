@@ -47,8 +47,8 @@ export const TaskSchema = z
     }
   );
 
-// Planner configuration schema
-export const PlannerConfigSchema = z
+// Day-specific configuration schema
+export const DayConfigSchema = z
   .object({
     startTime: TimeSchema,
     endTime: TimeSchema,
@@ -68,6 +68,9 @@ export const PlannerConfigSchema = z
       path: ['endTime'],
     }
   );
+
+// Global planner configuration schema (same structure as DayConfig for now)
+export const PlannerConfigSchema = DayConfigSchema;
 
 // Export data schemas
 export const DayExportSchema = z.object({
@@ -110,6 +113,7 @@ export type TimeHHMM = z.infer<typeof TimeSchema>;
 export type ColorName = z.infer<typeof ColorNameSchema>;
 export type DateKey = z.infer<typeof DateKeySchema>;
 export type Task = z.infer<typeof TaskSchema>;
+export type DayConfig = z.infer<typeof DayConfigSchema>;
 export type PlannerConfig = z.infer<typeof PlannerConfigSchema>;
 export type DayExport = z.infer<typeof DayExportSchema>;
 export type PlannerExport = z.infer<typeof PlannerExportSchema>;

@@ -5,6 +5,7 @@ import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -53,11 +54,41 @@ export function SettingsPanel() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  const { plannerConfig, updatePlannerConfig, exportData, importData } = usePlannerStore();
+  const [applyToCurrentDayOnly, setApplyToCurrentDayOnly] = useState(false);
+
+  const {
+    currentDate,
+    globalConfig,
+    getDayConfig,
+    updateGlobalConfig,
+    updateDayConfig,
+    resetDayConfig,
+    exportData,
+    importData
+  } = usePlannerStore();
+
+  // Get current day configuration
+  const dateKey = formatDateKey(currentDate);
+  const dayConfig = getDayConfig(dateKey);
+  const hasCustomDayConfig = JSON.stringify(dayConfig) !== JSON.stringify(globalConfig);
 
   // Check for File System Access API support
   const w: FSWin | undefined = typeof window !== 'undefined' ? (window as FSWin) : undefined;
   const supportsFileSystemAPI = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
+
+  // Configuration update handlers
+  const handleConfigUpdate = (config: Partial<typeof dayConfig>) => {
+    if (applyToCurrentDayOnly) {
+      updateDayConfig(dateKey, config);
+    } else {
+      updateGlobalConfig(config);
+    }
+  };
+
+  const handleResetDayConfig = () => {
+    resetDayConfig(dateKey);
+    toast.success('Day configuration reset to default');
+  };
 
   const handleExportData = async () => {
     if (isExporting) return;
@@ -209,8 +240,8 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">Start</Label>
               <Input
                 type="time"
-                value={plannerConfig.startTime}
-                onChange={(e) => updatePlannerConfig({ startTime: e.target.value })}
+                value={dayConfig.startTime}
+                onChange={(e) => handleConfigUpdate({ startTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
@@ -218,8 +249,8 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">End</Label>
               <Input
                 type="time"
-                value={plannerConfig.endTime}
-                onChange={(e) => updatePlannerConfig({ endTime: e.target.value })}
+                value={dayConfig.endTime}
+                onChange={(e) => handleConfigUpdate({ endTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
@@ -228,8 +259,8 @@ export function SettingsPanel() {
           <div>
             <Label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</Label>
             <Select
-              value={String(plannerConfig.interval)}
-              onValueChange={(v) => updatePlannerConfig({ interval: Number(v) })}
+              value={String(dayConfig.interval)}
+              onValueChange={(v) => handleConfigUpdate({ interval: Number(v) })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select interval" />
@@ -240,6 +271,34 @@ export function SettingsPanel() {
                 <SelectItem value="60">60 minutes</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2 border-t pt-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-neutral-500">Apply to current day only</Label>
+              <Switch
+                checked={applyToCurrentDayOnly}
+                onCheckedChange={setApplyToCurrentDayOnly}
+              />
+            </div>
+
+            {hasCustomDayConfig && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetDayConfig}
+                className="w-full text-xs"
+              >
+                Reset to Default Times
+              </Button>
+            )}
+
+            <div className="text-xs text-neutral-400">
+              {hasCustomDayConfig
+                ? `This day has custom times (${dayConfig.startTime} - ${dayConfig.endTime})`
+                : 'Using default times for this day'
+              }
+            </div>
           </div>
 
           <div>

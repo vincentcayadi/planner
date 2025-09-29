@@ -18,8 +18,12 @@ interface ScheduleDisplayRow {
 }
 
 export function ScheduleView() {
-  const { currentDate, plannerConfig, schedules, updateTaskForm } = usePlannerStore();
+  const { currentDate, getDayConfig, schedules, updateTaskForm } = usePlannerStore();
   const [isMobile, setIsMobile] = React.useState(false);
+
+  // Get day-specific config
+  const dateKey = formatDateKey(currentDate);
+  const dayConfig = getDayConfig(dateKey);
 
   React.useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -45,9 +49,9 @@ export function ScheduleView() {
 
   const timeSlots = useMemo(() => {
     const slots: string[] = [];
-    const safeInterval = Math.max(5, plannerConfig.interval || 30);
-    let t = timeToMinutes(plannerConfig.startTime);
-    const end = timeToMinutes(plannerConfig.endTime);
+    const safeInterval = Math.max(5, dayConfig.interval || 30);
+    let t = timeToMinutes(dayConfig.startTime);
+    const end = timeToMinutes(dayConfig.endTime);
 
     if (end <= t) return slots;
 
@@ -57,14 +61,14 @@ export function ScheduleView() {
     }
 
     return slots;
-  }, [plannerConfig.startTime, plannerConfig.endTime, plannerConfig.interval]);
+  }, [dayConfig.startTime, dayConfig.endTime, dayConfig.interval]);
 
   const scheduleDisplay = useMemo((): ScheduleDisplayRow[] => {
     // Change this line: use currentSchedule instead of getCurrentSchedule()
     const schedule = currentSchedule;
     const display: ScheduleDisplayRow[] = [];
-    const safeInterval = Math.max(5, plannerConfig.interval || 30);
-    const dayEnd = timeToMinutes(plannerConfig.endTime);
+    const safeInterval = Math.max(5, dayConfig.interval || 30);
+    const dayEnd = timeToMinutes(dayConfig.endTime);
 
     for (let i = 0; i < timeSlots.length; i++) {
       const timeSlot = timeSlots[i];
@@ -103,7 +107,7 @@ export function ScheduleView() {
     }
 
     return display;
-  }, [timeSlots, currentSchedule, plannerConfig.interval, plannerConfig.endTime]);
+  }, [timeSlots, currentSchedule, dayConfig.interval, dayConfig.endTime]);
 
   return (
     <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-3 pb-0 shadow-lg md:pt-6">

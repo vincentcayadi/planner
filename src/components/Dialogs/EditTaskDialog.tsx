@@ -28,15 +28,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime, to12h, snapToAnchor } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, to12h, snapToAnchor, formatDateKey } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName, Task } from '@/lib/types';
 
 export function EditTaskDialog() {
-  const { editDialog, plannerConfig, closeEditDialog, saveEditedTask, getCurrentSchedule } =
+  const { editDialog, currentDate, getDayConfig, closeEditDialog, saveEditedTask, getCurrentSchedule } =
     usePlannerStore();
   const [useDurationMode, setUseDurationMode] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Get day-specific config
+  const dateKey = formatDateKey(currentDate);
+  const dayConfig = getDayConfig(dateKey);
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -78,7 +82,7 @@ export function EditTaskDialog() {
 
     const startMinutes = timeToMinutes(newStartTime);
     const endMinutes = startMinutes + (editDialog.editItem.duration || 0);
-    const endLimit = timeToMinutes(plannerConfig.endTime);
+    const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
 
     updateEditItem({
@@ -89,13 +93,13 @@ export function EditTaskDialog() {
   };
 
   const handleStartTimeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const anchor = timeToMinutes(plannerConfig.startTime);
-    const endLimit = timeToMinutes(plannerConfig.endTime);
+    const anchor = timeToMinutes(dayConfig.startTime);
+    const endLimit = timeToMinutes(dayConfig.endTime);
     const raw = timeToMinutes(e.target.value);
 
     if (raw < anchor) {
       toast.error('Invalid start time', {
-        description: `Start time cannot be before day start (${to12h(plannerConfig.startTime)})`,
+        description: `Start time cannot be before day start (${to12h(dayConfig.startTime)})`,
       });
 
       const correctedStart = minutesToTime(anchor);
@@ -105,7 +109,7 @@ export function EditTaskDialog() {
 
     const snapped = Math.max(
       anchor,
-      Math.min(snapToAnchor(raw, plannerConfig.interval, anchor, 'nearest'), endLimit)
+      Math.min(snapToAnchor(raw, dayConfig.interval, anchor, 'nearest'), endLimit)
     );
 
     if (snapped !== raw) {
@@ -121,7 +125,7 @@ export function EditTaskDialog() {
 
     const startMinutes = timeToMinutes(editDialog.editItem.startTime);
     const endMinutes = startMinutes + duration;
-    const endLimit = timeToMinutes(plannerConfig.endTime);
+    const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
 
     updateEditItem({
@@ -135,8 +139,8 @@ export function EditTaskDialog() {
 
     const endMinutes = timeToMinutes(newEnd);
     const startMinutes = timeToMinutes(editDialog.editItem.startTime);
-    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
-    const endLimit = timeToMinutes(plannerConfig.endTime);
+    const newDuration = Math.max(dayConfig.interval, endMinutes - startMinutes);
+    const endLimit = timeToMinutes(dayConfig.endTime);
     const clampedEnd = Math.min(endMinutes, endLimit);
 
     updateEditItem({
@@ -215,7 +219,7 @@ export function EditTaskDialog() {
               endTime={editDialog.editItem.endTime}
               useDurationMode={useDurationMode}
               selectedColor={editDialog.editItem.color}
-              plannerConfig={plannerConfig}
+              plannerConfig={dayConfig}
               onStartTimeChange={handleStartTimeChange}
               onDurationChange={handleDurationChange}
               onEndTimeChange={handleEndTimeChange}

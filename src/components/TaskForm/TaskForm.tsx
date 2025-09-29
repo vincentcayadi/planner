@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimeSelectionInput } from '@/components/TimeSelection/TimeSelectionInput';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
-import { timeToMinutes, minutesToTime } from '@/lib/utils/time';
+import { timeToMinutes, minutesToTime, formatDateKey } from '@/lib/utils/time';
 import { toast } from 'sonner';
 import type { ColorName } from '@/lib/types';
 import { motion } from 'framer-motion';
@@ -18,8 +18,12 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Plus } from 'lucide-react';
 
 export function TaskForm() {
-  const { taskForm, plannerConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
+  const { taskForm, currentDate, getDayConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get day-specific config
+  const dateKey = formatDateKey(currentDate);
+  const dayConfig = getDayConfig(dateKey);
 
   // Calculate derived values
   const startMinutes = timeToMinutes(taskForm.taskStartTime);
@@ -62,7 +66,7 @@ export function TaskForm() {
     } else {
       // Keep end time, update duration
       const endMinutes = timeToMinutes(taskForm.taskEndTime || displayEndTime);
-      const newDuration = Math.max(plannerConfig.interval, endMinutes - newStartMinutes);
+      const newDuration = Math.max(dayConfig.interval, endMinutes - newStartMinutes);
       updateTaskForm({
         taskStartTime: newStart,
         taskDuration: String(newDuration),
@@ -72,7 +76,7 @@ export function TaskForm() {
 
   const handleEndTimeChange = (newEnd: string) => {
     const endMinutes = timeToMinutes(newEnd);
-    const newDuration = Math.max(plannerConfig.interval, endMinutes - startMinutes);
+    const newDuration = Math.max(dayConfig.interval, endMinutes - startMinutes);
 
     updateTaskForm({
       taskEndTime: newEnd,
@@ -120,7 +124,7 @@ export function TaskForm() {
           endTime={displayEndTime}
           useDurationMode={taskForm.useDurationMode}
           selectedColor={taskForm.selectedColor}
-          plannerConfig={plannerConfig}
+          plannerConfig={dayConfig}
           onStartTimeChange={handleStartTimeChange}
           onDurationChange={handleDurationChange}
           onEndTimeChange={handleEndTimeChange}
