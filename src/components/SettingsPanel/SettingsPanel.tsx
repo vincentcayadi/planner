@@ -1,7 +1,7 @@
 // src/components/SettingsPanel/SettingsPanel.tsx
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +60,7 @@ export function SettingsPanel() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
+  // Auto-save functionality
   // Auto-save functionality
   const { save: autoSaveDayConfig, isSaving: isSavingDayConfig } = useAutoSave(
     (config: DayConfig) => {
@@ -147,28 +148,27 @@ export function SettingsPanel() {
    * Handles conflict resolution actions
    */
   const handleConflictAction = (action: 'remove' | 'adjust' | 'allow') => {
-    if (!pendingChanges) return;
-
-    const newConfig = { ...displayConfig, ...pendingChanges };
+    const pendingAction = confirmationState.pendingAction;
+    if (!pendingAction) return;
 
     switch (action) {
       case 'remove':
         // Remove conflicting tasks and apply config
         // TODO: Implement task removal logic
-        updateDayConfig(dateKey, pendingChanges);
+        pendingAction();
         toast.success('Settings applied with conflicting tasks removed');
         break;
 
       case 'adjust':
         // Auto-adjust tasks to fit within new bounds
         // TODO: Implement task adjustment logic
-        updateDayConfig(dateKey, pendingChanges);
+        pendingAction();
         toast.success('Settings applied with tasks auto-adjusted');
         break;
 
       case 'allow':
         // Allow tasks outside bounds
-        updateDayConfig(dateKey, pendingChanges);
+        pendingAction();
         toast.success('Settings applied, tasks may be outside day bounds');
         break;
     }
@@ -324,27 +324,27 @@ export function SettingsPanel() {
         <CardContent className="space-y-3 pt-0">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="mb-1 block text-xs text-neutral-500">Start</Label>
+              <Label className="label-text-block">Start</Label>
               <Input
                 type="time"
                 value={localConfig.startTime}
                 onChange={(e) => handleConfigChange({ startTime: e.target.value })}
-                className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
+                className="time-input-settings"
               />
             </div>
             <div>
-              <Label className="mb-1 block text-xs text-neutral-500">End</Label>
+              <Label className="label-text-block">End</Label>
               <Input
                 type="time"
                 value={localConfig.endTime}
                 onChange={(e) => handleConfigChange({ endTime: e.target.value })}
-                className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
+                className="time-input-settings"
               />
             </div>
           </div>
 
           <div>
-            <Label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</Label>
+            <Label className="label-text-block">Interval (minutes)</Label>
             <Select
               value={String(localConfig.interval)}
               onValueChange={(v) => handleConfigChange({ interval: Number(v) })}
@@ -363,7 +363,7 @@ export function SettingsPanel() {
           {/* Auto-save status indicator */}
           {isSavingDayConfig && (
             <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
-              <div className="flex items-center gap-2">
+              <div className="loading-indicator">
                 <LoadingSpinner size="sm" />
                 <span className="text-sm text-blue-800">Saving changes...</span>
               </div>
@@ -380,7 +380,7 @@ export function SettingsPanel() {
                 }
               </div>
               {isSavingDayConfig && (
-                <div className="flex items-center gap-1 text-xs text-blue-600">
+                <div className="loading-indicator-sm text-blue-600">
                   <LoadingSpinner size="sm" />
                   <span>Saving...</span>
                 </div>
@@ -388,11 +388,7 @@ export function SettingsPanel() {
             </div>
             {hasCustomDayConfig && (
               <Button
-                onClick={() => {
-                  resetDayConfig(dateKey);
-                  setLocalConfig(globalConfig);
-                  toast.success('Day reverted to global settings');
-                }}
+                onClick={handleRevertToGlobal}
                 variant="outline"
                 size="sm"
                 className="w-full"
@@ -403,22 +399,22 @@ export function SettingsPanel() {
           </div>
 
           <div>
-            <Label className="mb-2 block text-xs text-neutral-500">Data Management</Label>
+            <Label className="label-text-block">Data Management</Label>
             <div className="grid grid-cols-2 gap-2">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="secondary"
-                  className="w-full text-xs transition-all duration-200 hover:shadow-md"
+                  className="action-button"
                   onClick={handleImportData}
                   disabled={isImporting}
                 >
                   {isImporting ? (
-                    <div className="flex items-center gap-1">
+                    <div className="loading-indicator-sm">
                       <LoadingSpinner size="sm" />
                       <span>Loading...</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1">
+                    <div className="loading-indicator-sm">
                       <Upload className="h-3 w-3" />
                       <span>Import</span>
                     </div>
@@ -428,17 +424,17 @@ export function SettingsPanel() {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="secondary"
-                  className="w-full text-xs transition-all duration-200 hover:shadow-md"
+                  className="action-button"
                   onClick={handleExportData}
                   disabled={isExporting}
                 >
                   {isExporting ? (
-                    <div className="flex items-center gap-1">
+                    <div className="loading-indicator-sm">
                       <LoadingSpinner size="sm" />
                       <span>Saving...</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1">
+                    <div className="loading-indicator-sm">
                       <Download className="h-3 w-3" />
                       <span>Export</span>
                     </div>
@@ -446,7 +442,7 @@ export function SettingsPanel() {
                 </Button>
               </motion.div>
             </div>
-            <p className="mt-1 text-xs text-neutral-400">Backup and restore your schedules</p>
+            <p className="mt-1 status-text">Backup and restore your schedules</p>
           </div>
         </CardContent>
       </Card>

@@ -78,7 +78,7 @@ export function useAutoSave<T extends (...args: any[]) => void>(
   delay: number = DEBOUNCE_DELAYS.STANDARD
 ) {
   const [isSaving, setIsSaving] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const save = useCallback((...args: Parameters<T>) => {
     if (timeoutRef.current) {

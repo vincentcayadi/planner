@@ -96,7 +96,7 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
             <div className="text-xs text-neutral-600">
               {customDaysCount > 0 ? (
                 <>
-                  {customDaysCount} day{customDaysCount !== 1 ? 's' : ''} have custom settings that won't be affected
+                  {customDaysCount} day{customDaysCount !== 1 ? 's' : ''} have custom settings that won&apos;t be affected
                 </>
               ) : (
                 'These settings will apply to all days'

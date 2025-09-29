@@ -143,14 +143,27 @@ export default function PlannerPage() {
                   {/* Mobile Header */}
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-neutral-700">Planner</h2>
-                    <Button
-                      onClick={() => setIsSidebarOpen(false)}
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => {
+                          setIsGlobalSettingsOpen(true);
+                          setIsSidebarOpen(false);
+                        }}
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        onClick={() => setIsSidebarOpen(false)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Settings Panel */}
