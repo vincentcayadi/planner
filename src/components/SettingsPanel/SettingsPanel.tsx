@@ -68,7 +68,6 @@ export function SettingsPanel() {
     getDayConfig,
     updateGlobalConfig,
     updateDayConfig,
-    resetDayConfig,
     exportData,
     importData
   } = usePlannerStore();
@@ -123,14 +122,6 @@ export function SettingsPanel() {
     setTempConfig(null);
   };
 
-  /**
-   * Resets current day to use global defaults
-   */
-  const handleResetDayConfig = () => {
-    resetDayConfig(dateKey);
-    toast.success('Day configuration reset to default');
-    cancelChanges();
-  };
 
   const handleExportData = async () => {
     if (isExporting) return;
@@ -347,20 +338,9 @@ export function SettingsPanel() {
             </div>
           )}
 
-          {/* Day status and reset option */}
+          {/* Day status */}
           {!pendingChanges && (
             <div className="space-y-2 border-t pt-3">
-              {hasCustomDayConfig && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetDayConfig}
-                  className="w-full text-xs"
-                >
-                  Reset to Default Times
-                </Button>
-              )}
-
               <div className="text-xs text-neutral-400">
                 {hasCustomDayConfig
                   ? `This day has custom times (${dayConfig.startTime} - ${dayConfig.endTime})`
