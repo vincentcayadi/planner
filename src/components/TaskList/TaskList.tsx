@@ -100,6 +100,18 @@ export function TaskList() {
     }
 
     try {
+      // Clean up old link to prevent Redis bloat
+      if (existingShare?.id) {
+        try {
+          await fetch(`/api/share/${existingShare.id}`, {
+            method: 'DELETE',
+          });
+        } catch (error) {
+          // Continue even if deletion fails - don't block new link creation
+          console.warn('Failed to delete old share link:', error);
+        }
+      }
+
       // Get planner config from store
       const { plannerConfig } = usePlannerStore.getState();
 
