@@ -1,27 +1,32 @@
-// src/stores/plannerStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { Task, ColorName, TaskFormState, PlannerConfig, PlannerExport } from '@/lib/types';
+import type { Task, ColorName, TaskFormState, PlannerConfig, DayConfig, PlannerExport } from '@/lib/types';
 import { formatDateKey, timeToMinutes, minutesToTime, overlaps } from '@/lib/utils/time';
 import Dexie from 'dexie';
 
-// Database setup
+/**
+ * IndexedDB database for persistent storage with automatic versioning
+ * v1: Basic schedules and global settings
+ * v2: Added per-day configurations
+ */
 const db = new Dexie('plannerDB');
 db.version(1).stores({ days: 'dateKey', meta: 'key' });
+db.version(2).stores({
+  days: 'dateKey',
+  meta: 'key',
+  dayConfigs: 'dateKey'
+});
 
+/**
+ * Main application state interface
+ */
 interface PlannerState {
-  // Core data
   schedules: Record<string, Task[]>;
   currentDate: Date;
-
-  // Planner configuration
-  plannerConfig: PlannerConfig;
-
-  // Task form state
+  globalConfig: PlannerConfig;
+  dayConfigs: Record<string, DayConfig>;
   taskForm: TaskFormState;
-
-  // Dialog states
   conflictDialog: {
     isOpen: boolean;
     conflicts: Task[];
@@ -49,7 +54,10 @@ interface PlannerState {
 
   // Actions
   setCurrentDate: (date: Date) => void;
-  updatePlannerConfig: (config: Partial<PlannerConfig>) => void;
+  updateGlobalConfig: (config: Partial<PlannerConfig>) => void;
+  updateDayConfig: (dateKey: string, config: Partial<DayConfig>) => void;
+  getDayConfig: (dateKey: string) => DayConfig;
+  resetDayConfig: (dateKey: string) => void;
   updateTaskForm: (updates: Partial<TaskFormState>) => void;
   resetTaskForm: () => void;
 
@@ -77,6 +85,7 @@ interface PlannerState {
   // Utility functions
   getCurrentSchedule: () => Task[];
   findConflictingTasks: (startTime: string, endTime: string, excludeId?: string) => Task[];
+  checkDayConfigConflicts: (dateKey: string, newConfig: DayConfig) => Task[];
 
   // Data persistence
   loadFromStorage: () => Promise<void>;
@@ -101,7 +110,7 @@ const initialTaskForm: TaskFormState = {
   useDurationMode: true,
 };
 
-const initialPlannerConfig: PlannerConfig = {
+const initialGlobalConfig: PlannerConfig = {
   startTime: '08:00',
   endTime: '23:30',
   interval: 30,
@@ -113,8 +122,9 @@ export const usePlannerStore = create<PlannerState>()(
       // Initial state
       schedules: {},
       currentDate: new Date(),
-      plannerConfig: initialPlannerConfig,
-      taskForm: { ...initialTaskForm, taskStartTime: initialPlannerConfig.startTime },
+      globalConfig: initialGlobalConfig,
+      dayConfigs: {},
+      taskForm: { ...initialTaskForm, taskStartTime: initialGlobalConfig.startTime },
       sharedLinks: {},
 
       conflictDialog: {
@@ -145,19 +155,53 @@ export const usePlannerStore = create<PlannerState>()(
         });
       },
 
-      updatePlannerConfig: (config: Partial<PlannerConfig>) => {
+      /**
+       * Updates global configuration that applies to all days by default
+       */
+      updateGlobalConfig: (config: Partial<PlannerConfig>) => {
         set((state) => {
-          Object.assign(state.plannerConfig, config);
-
-          // If start time is being updated, also update the task form's default start time
+          Object.assign(state.globalConfig, config);
           if (config.startTime) {
             state.taskForm.taskStartTime = config.startTime;
           }
         });
+        get().saveToStorage();
+      },
 
-        // Persist to IndexedDB
-        const { saveToStorage } = get();
-        saveToStorage();
+      /**
+       * Updates configuration for a specific day, creating day-specific overrides
+       */
+      updateDayConfig: (dateKey: string, config: Partial<DayConfig>) => {
+        set((state) => {
+          if (!state.dayConfigs[dateKey]) {
+            state.dayConfigs[dateKey] = { ...state.globalConfig };
+          }
+          Object.assign(state.dayConfigs[dateKey], config);
+
+          const currentDateKey = formatDateKey(state.currentDate);
+          if (dateKey === currentDateKey && config.startTime) {
+            state.taskForm.taskStartTime = config.startTime;
+          }
+        });
+        get().saveToStorage();
+      },
+
+      /**
+       * Retrieves configuration for a specific day, falling back to global config
+       */
+      getDayConfig: (dateKey: string): DayConfig => {
+        const { dayConfigs, globalConfig } = get();
+        return dayConfigs[dateKey] || globalConfig;
+      },
+
+      /**
+       * Removes day-specific configuration, reverting to global defaults
+       */
+      resetDayConfig: (dateKey: string) => {
+        set((state) => {
+          delete state.dayConfigs[dateKey];
+        });
+        get().saveToStorage();
       },
 
       updateTaskForm: (updates: Partial<TaskFormState>) => {
@@ -168,27 +212,34 @@ export const usePlannerStore = create<PlannerState>()(
 
       resetTaskForm: () => {
         set((state) => {
-          const { plannerConfig } = get();
+          const { getDayConfig, currentDate } = get();
+          const dateKey = formatDateKey(currentDate);
+          const dayConfig = getDayConfig(dateKey);
 
           state.taskForm = {
             ...initialTaskForm,
-            taskStartTime: plannerConfig.startTime,
+            taskStartTime: dayConfig.startTime,
             taskEndTime: '',
           };
         });
       },
 
+      /**
+       * Validates and adds a new task to the current day's schedule
+       * Handles time validation, conflict detection, and automatic storage
+       */
       addTask: async () => {
         const {
           taskForm,
           currentDate,
           schedules,
-          plannerConfig,
+          getDayConfig,
           findConflictingTasks,
           openConflictDialog,
         } = get();
 
-        // Validation
+        const dateKey = formatDateKey(currentDate);
+        const dayConfig = getDayConfig(dateKey);
         const trimmedName = taskForm.taskName.trim();
         if (!trimmedName) {
           set((state) => {
@@ -206,8 +257,8 @@ export const usePlannerStore = create<PlannerState>()(
         const endMinutes = startMinutes + duration;
 
         // Validate time bounds
-        const dayStart = timeToMinutes(plannerConfig.startTime);
-        const dayEnd = timeToMinutes(plannerConfig.endTime);
+        const dayStart = timeToMinutes(dayConfig.startTime);
+        const dayEnd = timeToMinutes(dayConfig.endTime);
 
         if (startMinutes < dayStart) {
           return { success: false, error: 'Start time is before day start' };
@@ -221,7 +272,6 @@ export const usePlannerStore = create<PlannerState>()(
           return { success: false, error: 'Invalid duration' };
         }
 
-        const dateKey = formatDateKey(currentDate);
         const newTask: Task = {
           id: crypto.randomUUID(),
           name: trimmedName,
@@ -323,12 +373,13 @@ export const usePlannerStore = create<PlannerState>()(
       },
 
       autoFillBreaks: () => {
-        const { currentDate, plannerConfig, getCurrentSchedule } = get();
+        const { currentDate, getDayConfig, getCurrentSchedule } = get();
         const dateKey = formatDateKey(currentDate);
+        const dayConfig = getDayConfig(dateKey);
         const currentSchedule = getCurrentSchedule();
 
-        const startMinutes = timeToMinutes(plannerConfig.startTime);
-        const endMinutes = timeToMinutes(plannerConfig.endTime);
+        const startMinutes = timeToMinutes(dayConfig.startTime);
+        const endMinutes = timeToMinutes(dayConfig.endTime);
 
         // Remove existing breaks first to prevent duplicates and enable merging
         const nonBreakTasks = currentSchedule.filter(task => task.name !== 'Break');
@@ -536,6 +587,22 @@ export const usePlannerStore = create<PlannerState>()(
         });
       },
 
+      checkDayConfigConflicts: (dateKey: string, newConfig: DayConfig) => {
+        const { schedules } = get();
+        const dayTasks = schedules[dateKey] || [];
+
+        const newDayStart = timeToMinutes(newConfig.startTime);
+        const newDayEnd = timeToMinutes(newConfig.endTime);
+
+        return dayTasks.filter((task) => {
+          const taskStart = timeToMinutes(task.startTime);
+          const taskEnd = timeToMinutes(task.endTime);
+
+          // Check if task falls outside new day bounds
+          return taskStart < newDayStart || taskEnd > newDayEnd;
+        });
+      },
+
       // Data persistence
       loadFromStorage: async () => {
         set((state) => {
@@ -546,8 +613,10 @@ export const usePlannerStore = create<PlannerState>()(
           const days = db.table('days');
           const meta = db.table('meta');
 
-          const [scheduleRows, startTimeRow, endTimeRow, intervalRow] = await Promise.all([
+          const dayConfigsTable = db.table('dayConfigs');
+          const [scheduleRows, dayConfigRows, startTimeRow, endTimeRow, intervalRow] = await Promise.all([
             days.toArray(),
+            dayConfigsTable.toArray(),
             meta.get('startTime'),
             meta.get('endTime'),
             meta.get('interval'),
@@ -563,15 +632,26 @@ export const usePlannerStore = create<PlannerState>()(
               state.schedules = loadedSchedules;
             }
 
-            // Load planner config
-            if (startTimeRow?.value) state.plannerConfig.startTime = startTimeRow.value;
-            if (endTimeRow?.value) state.plannerConfig.endTime = endTimeRow.value;
-            if (intervalRow?.value) state.plannerConfig.interval = Number(intervalRow.value);
-
-            // Sync task form start time with loaded planner start time
-            if (startTimeRow?.value) {
-              state.taskForm.taskStartTime = startTimeRow.value;
+            // Load day configs
+            if (dayConfigRows?.length) {
+              const loadedDayConfigs: Record<string, DayConfig> = {};
+              dayConfigRows.forEach((row: { dateKey: string; config?: DayConfig }) => {
+                if (row.config) {
+                  loadedDayConfigs[row.dateKey] = row.config;
+                }
+              });
+              state.dayConfigs = loadedDayConfigs;
             }
+
+            // Load global config
+            if (startTimeRow?.value) state.globalConfig.startTime = startTimeRow.value;
+            if (endTimeRow?.value) state.globalConfig.endTime = endTimeRow.value;
+            if (intervalRow?.value) state.globalConfig.interval = Number(intervalRow.value);
+
+            // Sync task form start time with current day's start time
+            const currentDateKey = formatDateKey(state.currentDate);
+            const dayConfig = state.dayConfigs[currentDateKey] || state.globalConfig;
+            state.taskForm.taskStartTime = dayConfig.startTime;
           });
         } catch (error) {
           console.error('Failed to load from storage:', error);
@@ -583,7 +663,7 @@ export const usePlannerStore = create<PlannerState>()(
       },
 
       saveToStorage: async () => {
-        const { schedules, plannerConfig } = get();
+        const { schedules, globalConfig, dayConfigs } = get();
 
         set((state) => {
           state.isSaving = true;
@@ -592,23 +672,35 @@ export const usePlannerStore = create<PlannerState>()(
         try {
           const days = db.table('days');
           const meta = db.table('meta');
+          const dayConfigsTable = db.table('dayConfigs');
 
           // Save schedules
-          const rows = Object.entries(schedules).map(([dateKey, items]) => ({
+          const scheduleRows = Object.entries(schedules).map(([dateKey, items]) => ({
             dateKey,
             items,
           }));
 
           await days.clear();
-          if (rows.length) {
-            await days.bulkPut(rows);
+          if (scheduleRows.length) {
+            await days.bulkPut(scheduleRows);
           }
 
-          // Save planner config
+          // Save day configs
+          const dayConfigRows = Object.entries(dayConfigs).map(([dateKey, config]) => ({
+            dateKey,
+            config,
+          }));
+
+          await dayConfigsTable.clear();
+          if (dayConfigRows.length) {
+            await dayConfigsTable.bulkPut(dayConfigRows);
+          }
+
+          // Save global config
           await meta.bulkPut([
-            { key: 'startTime', value: plannerConfig.startTime },
-            { key: 'endTime', value: plannerConfig.endTime },
-            { key: 'interval', value: plannerConfig.interval },
+            { key: 'startTime', value: globalConfig.startTime },
+            { key: 'endTime', value: globalConfig.endTime },
+            { key: 'interval', value: globalConfig.interval },
           ]);
         } catch (error) {
           console.error('Failed to save to storage:', error);
@@ -620,7 +712,7 @@ export const usePlannerStore = create<PlannerState>()(
       },
 
       exportData: (): PlannerExport => {
-        const { schedules, plannerConfig } = get();
+        const { schedules, globalConfig } = get();
 
         const days = Object.entries(schedules)
           .map(([dateKey, items]) => ({
@@ -632,7 +724,7 @@ export const usePlannerStore = create<PlannerState>()(
 
         return {
           exportedAt: new Date().toISOString(),
-          planner: plannerConfig,
+          planner: globalConfig,
           days,
         };
       },
@@ -644,8 +736,8 @@ export const usePlannerStore = create<PlannerState>()(
 
         try {
           set((state) => {
-            // Update planner config
-            state.plannerConfig = { ...data.planner };
+            // Update global config
+            state.globalConfig = { ...data.planner };
 
             // Update schedules
             const newSchedules: Record<string, Task[]> = {};
@@ -692,7 +784,8 @@ export const usePlannerStore = create<PlannerState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         schedules: state.schedules,
-        plannerConfig: state.plannerConfig,
+        globalConfig: state.globalConfig,
+        dayConfigs: state.dayConfigs,
         sharedLinks: state.sharedLinks,
       }),
     }

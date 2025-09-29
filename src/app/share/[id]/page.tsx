@@ -144,11 +144,11 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                     );
                   }
 
-                  const colorConfig = COLORS.find((x) => x.name === row.task.color);
+                  const colorConfig = COLORS.find((x) => x.name === row.task!.color);
 
                   return (
                     <div
-                      key={`task-${row.task.id}-${i}`}
+                      key={`task-${row.task!.id}-${i}`}
                       className="grid grid-cols-[70px_1fr] sm:grid-cols-[90px_1fr] border-b border-neutral-200 md:grid-cols-[110px_1fr]"
                     >
                       <div className="flex items-start justify-center border-r border-neutral-200 bg-orange-100 px-3 py-3 text-xs font-semibold tracking-wide whitespace-nowrap text-neutral-700 tabular-nums sm:px-4 sm:py-4 md:px-5 md:py-4 md:text-sm">
@@ -161,14 +161,14 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                           height: `${Math.max(row.rowSpan * 44, 44)}px`,
                         }}
                       >
-                        <div className="text-sm font-semibold sm:text-lg md:text-xl">{row.task.name}</div>
-                        {row.task.description && (
+                        <div className="text-sm font-semibold sm:text-lg md:text-xl">{row.task!.name}</div>
+                        {row.task!.description && (
                           <div className="text-xs whitespace-pre-wrap text-neutral-700 line-clamp-2 sm:line-clamp-none md:text-sm">
-                            {row.task.description}
+                            {row.task!.description}
                           </div>
                         )}
                         <div className="text-xs text-neutral-600 sm:text-sm md:text-sm">
-                          {to12h(row.task.startTime)} – {to12h(row.task.endTime)}
+                          {to12h(row.task!.startTime)} – {to12h(row.task!.endTime)}
                         </div>
                       </div>
                     </div>

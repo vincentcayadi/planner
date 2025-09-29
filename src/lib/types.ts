@@ -1,7 +1,12 @@
-// src/lib/types/index.ts
+/**
+ * Type definitions and validation schemas for the planner application
+ * Uses Zod for runtime validation and type safety
+ */
 import { z } from 'zod';
 
-// Base validation schemas
+/**
+ * Time format validation (HH:MM in 24-hour format)
+ */
 export const TimeSchema = z
   .string()
   .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format. Expected HH:MM');
@@ -47,8 +52,8 @@ export const TaskSchema = z
     }
   );
 
-// Planner configuration schema
-export const PlannerConfigSchema = z
+// Day-specific configuration schema
+export const DayConfigSchema = z
   .object({
     startTime: TimeSchema,
     endTime: TimeSchema,
@@ -68,6 +73,9 @@ export const PlannerConfigSchema = z
       path: ['endTime'],
     }
   );
+
+// Global planner configuration schema (same structure as DayConfig for now)
+export const PlannerConfigSchema = DayConfigSchema;
 
 // Export data schemas
 export const DayExportSchema = z.object({
@@ -110,6 +118,7 @@ export type TimeHHMM = z.infer<typeof TimeSchema>;
 export type ColorName = z.infer<typeof ColorNameSchema>;
 export type DateKey = z.infer<typeof DateKeySchema>;
 export type Task = z.infer<typeof TaskSchema>;
+export type DayConfig = z.infer<typeof DayConfigSchema>;
 export type PlannerConfig = z.infer<typeof PlannerConfigSchema>;
 export type DayExport = z.infer<typeof DayExportSchema>;
 export type PlannerExport = z.infer<typeof PlannerExportSchema>;
