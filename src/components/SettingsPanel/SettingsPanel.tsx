@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Calendar16 from '@/components/calendar-16';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -352,8 +353,10 @@ export function SettingsPanel() {
             </Select>
           </div>
 
+          <Separator />
+
           {/* Data Management */}
-          <div className="space-y-3 border-t pt-3">
+          <div className="space-y-3">
             <Label className="label-text-block">Data Management</Label>
             <div className="grid grid-cols-2 gap-2">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -400,8 +403,10 @@ export function SettingsPanel() {
             <p className="status-text mt-1">Backup and restore your schedules</p>
           </div>
 
+          <Separator />
+
           {/* Global Actions */}
-          <div className="space-y-2 border-t pt-3">
+          <div className="space-y-2">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={() => setIsGlobalSettingsOpen(true)}

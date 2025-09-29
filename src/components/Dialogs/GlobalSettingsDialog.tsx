@@ -23,6 +23,7 @@ import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Save, RotateCcw } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import type { PlannerConfig } from '@/lib/types';
 
 interface GlobalSettingsDialogProps {
@@ -73,15 +74,15 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-6">
+        <DialogHeader className="space-y-3">
           <DialogTitle>Global Settings</DialogTitle>
           <DialogDescription>
             Configure default settings for all days. Days with custom settings will remain unchanged.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Current Status */}
           <div className="rounded-lg bg-neutral-50 p-4">
             <div className="flex items-center justify-between mb-2">
@@ -137,11 +138,9 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
                 <SelectValue placeholder="Select default interval" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="5">5 minutes</SelectItem>
-                <SelectItem value="10">10 minutes</SelectItem>
                 <SelectItem value="15">15 minutes</SelectItem>
                 <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">1 hour</SelectItem>
+                <SelectItem value="60">60 minutes</SelectItem>
               </SelectContent>
             </Select>
             <p className="mt-1 text-xs text-neutral-500">
@@ -149,8 +148,10 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
             </p>
           </div>
 
+          <Separator />
+
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-3">
             <Button
               onClick={handleReset}
               variant="outline"

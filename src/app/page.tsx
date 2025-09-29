@@ -14,7 +14,7 @@ import { ClearAllDialog } from '@/components/Dialogs/ClearAllDialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PlannerPage() {
@@ -39,7 +39,10 @@ export default function PlannerPage() {
   }, []);
 
   // Handle touch gestures for sidebar
-  const handleSidebarDrag = (event: MouseEvent | TouchEvent, info: { offset: { x: number; y: number } }) => {
+  const handleSidebarDrag = (
+    event: MouseEvent | TouchEvent,
+    info: { offset: { x: number; y: number } }
+  ) => {
     // Close sidebar if dragged left significantly
     if (info.offset.x < -100) {
       setIsSidebarOpen(false);
@@ -47,7 +50,10 @@ export default function PlannerPage() {
   };
 
   // Handle swipe gesture to open sidebar from main content
-  const handleMainContentDrag = (event: MouseEvent | TouchEvent, info: { offset: { x: number; y: number } }) => {
+  const handleMainContentDrag = (
+    event: MouseEvent | TouchEvent,
+    info: { offset: { x: number; y: number } }
+  ) => {
     // Open sidebar if swiped right from left edge
     if (info.offset.x > 100 && 'clientX' in event && event.clientX < 50) {
       setIsSidebarOpen(true);
@@ -65,21 +71,24 @@ export default function PlannerPage() {
   return (
     <>
       <div className="h-full overflow-hidden bg-[radial-gradient(ellipse_at_100%_100%,_theme(colors.violet.300),_theme(colors.indigo.200)_60%,_theme(colors.blue.100))]">
-
         {/* Mobile Menu Button */}
-        <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <div className="fixed right-6 bottom-6 z-50 md:hidden">
           <Button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             size="lg"
-            className="h-14 w-14 rounded-full bg-white shadow-lg border-2 border-neutral-200 hover:bg-neutral-50 hover:shadow-xl transition-all duration-200"
+            className="h-14 w-14 rounded-full border-2 border-neutral-200 bg-white shadow-lg transition-all duration-200 hover:bg-neutral-50 hover:shadow-xl"
           >
-            {isSidebarOpen ? <X className="h-5 w-5 text-neutral-700" /> : <Menu className="h-5 w-5 text-neutral-700" />}
+            {isSidebarOpen ? (
+              <X className="h-5 w-5 text-neutral-700" />
+            ) : (
+              <Menu className="h-5 w-5 text-neutral-700" />
+            )}
           </Button>
         </div>
 
         <div className="flex h-full">
           {/* Desktop Sidebar */}
-          <aside className="hidden md:flex w-80 flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg">
+          <aside className="hidden w-80 flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg md:flex">
             {/* Settings Panel */}
             <SettingsPanel />
 
@@ -100,23 +109,23 @@ export default function PlannerPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="md:hidden fixed inset-0 bg-black/50 z-40"
+                  className="fixed inset-0 z-40 bg-black/50 md:hidden"
                   onClick={() => setIsSidebarOpen(false)}
                 />
                 {/* Mobile Sidebar */}
                 <motion.aside
-                  initial={{ x: "-100%" }}
+                  initial={{ x: '-100%' }}
                   animate={{ x: 0 }}
-                  exit={{ x: "-100%" }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   drag="x"
                   dragConstraints={{ left: -320, right: 0 }}
                   dragElastic={0.2}
                   onDragEnd={handleSidebarDrag}
-                  className="md:hidden fixed left-0 top-0 h-full w-80 flex flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg z-50"
+                  className="fixed top-0 left-0 z-50 flex h-full w-80 flex-col gap-4 overflow-y-auto bg-white p-6 shadow-lg md:hidden"
                 >
                   {/* Mobile Header */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-neutral-700">Planner</h2>
                     <div className="flex items-center gap-2">
                       <Button
@@ -177,5 +186,3 @@ export default function PlannerPage() {
     </>
   );
 }
-
-

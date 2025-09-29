@@ -47,6 +47,51 @@ export function TaskForm() {
   const calculatedEndTime = minutesToTime(endMinutes);
   const displayEndTime = taskForm.taskEndTime || calculatedEndTime;
 
+  // Generate interval-based duration options
+  const generateDurationOptions = useMemo(() => {
+    const options = [];
+
+    if (dayConfig.interval === 15) {
+      // 15min interval: show 15, 30, 45, 60, 75, 90, 105, 120, etc.
+      for (let multiplier = 1; multiplier <= 16; multiplier++) {
+        const duration = 15 * multiplier;
+        if (duration <= 240) options.push(duration);
+      }
+    } else if (dayConfig.interval === 30) {
+      // 30min interval: show 30, 60, 90, 120, 150, 180, 210, 240
+      for (let multiplier = 1; multiplier <= 8; multiplier++) {
+        const duration = 30 * multiplier;
+        if (duration <= 240) options.push(duration);
+      }
+    } else if (dayConfig.interval === 60) {
+      // 60min interval: show 1h, 2h, 3h, 4h (by the hour)
+      for (let hours = 1; hours <= 4; hours++) {
+        options.push(hours * 60);
+      }
+    }
+
+    return options.map(duration => ({
+      value: String(duration),
+      label: duration >= 60
+        ? `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}min` : ''}`
+        : `${duration} min`
+    }));
+  }, [dayConfig.interval]);
+
+  // Auto-select first available duration if current one is invalid
+  React.useEffect(() => {
+    const currentDuration = parseInt(taskForm.taskDuration, 10);
+    const validDurations = generateDurationOptions.map(opt => parseInt(opt.value, 10));
+
+    if (currentDuration > 0 && !validDurations.includes(currentDuration)) {
+      // Default to the first option (smallest interval)
+      const defaultDuration = validDurations[0];
+      if (defaultDuration) {
+        handleDurationChange(defaultDuration);
+      }
+    }
+  }, [dayConfig.interval]);
+
   /**
    * Handles task submission with loading state management
    */
@@ -180,14 +225,11 @@ export function TaskForm() {
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
-                    <SelectItem value="90">1.5 hours</SelectItem>
-                    <SelectItem value="120">2 hours</SelectItem>
-                    <SelectItem value="180">3 hours</SelectItem>
-                    <SelectItem value="240">4 hours</SelectItem>
+                    {generateDurationOptions.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               ) : (
