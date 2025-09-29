@@ -90,7 +90,7 @@ export function TaskForm() {
         handleDurationChange(defaultDuration);
       }
     }
-  }, [dayConfig.interval]);
+  }, [dayConfig.interval, generateDurationOptions, handleDurationChange, taskForm.taskDuration]);
 
   /**
    * Handles task submission with loading state management

@@ -14,7 +14,7 @@ import { ClearAllDialog } from '@/components/Dialogs/ClearAllDialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Settings } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PlannerPage() {
@@ -128,17 +128,6 @@ export default function PlannerPage() {
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-neutral-700">Planner</h2>
                     <div className="flex items-center gap-2">
-                      <Button
-                        onClick={() => {
-                          setIsGlobalSettingsOpen(true);
-                          setIsSidebarOpen(false);
-                        }}
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                      >
-                        <Settings className="h-3 w-3" />
-                      </Button>
                       <Button
                         onClick={() => setIsSidebarOpen(false)}
                         size="sm"
