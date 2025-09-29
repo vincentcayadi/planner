@@ -1,4 +1,3 @@
-// src/stores/plannerStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -6,28 +5,28 @@ import type { Task, ColorName, TaskFormState, PlannerConfig, DayConfig, PlannerE
 import { formatDateKey, timeToMinutes, minutesToTime, overlaps } from '@/lib/utils/time';
 import Dexie from 'dexie';
 
-// Database setup
+/**
+ * IndexedDB database for persistent storage with automatic versioning
+ * v1: Basic schedules and global settings
+ * v2: Added per-day configurations
+ */
 const db = new Dexie('plannerDB');
 db.version(1).stores({ days: 'dateKey', meta: 'key' });
 db.version(2).stores({
   days: 'dateKey',
   meta: 'key',
-  dayConfigs: 'dateKey' // New table for per-day configurations
+  dayConfigs: 'dateKey'
 });
 
+/**
+ * Main application state interface
+ */
 interface PlannerState {
-  // Core data
   schedules: Record<string, Task[]>;
   currentDate: Date;
-
-  // Configuration
-  globalConfig: PlannerConfig; // Default configuration for new days
-  dayConfigs: Record<string, DayConfig>; // Per-day configurations
-
-  // Task form state
+  globalConfig: PlannerConfig;
+  dayConfigs: Record<string, DayConfig>;
   taskForm: TaskFormState;
-
-  // Dialog states
   conflictDialog: {
     isOpen: boolean;
     conflicts: Task[];
@@ -155,54 +154,53 @@ export const usePlannerStore = create<PlannerState>()(
         });
       },
 
+      /**
+       * Updates global configuration that applies to all days by default
+       */
       updateGlobalConfig: (config: Partial<PlannerConfig>) => {
         set((state) => {
           Object.assign(state.globalConfig, config);
-
-          // If start time is being updated, also update the task form's default start time
           if (config.startTime) {
             state.taskForm.taskStartTime = config.startTime;
           }
         });
-
-        // Persist to IndexedDB
-        const { saveToStorage } = get();
-        saveToStorage();
+        get().saveToStorage();
       },
 
+      /**
+       * Updates configuration for a specific day, creating day-specific overrides
+       */
       updateDayConfig: (dateKey: string, config: Partial<DayConfig>) => {
         set((state) => {
           if (!state.dayConfigs[dateKey]) {
-            // If no day config exists, start with global config
             state.dayConfigs[dateKey] = { ...state.globalConfig };
           }
           Object.assign(state.dayConfigs[dateKey], config);
 
-          // If updating current day's start time, update task form
           const currentDateKey = formatDateKey(state.currentDate);
           if (dateKey === currentDateKey && config.startTime) {
             state.taskForm.taskStartTime = config.startTime;
           }
         });
-
-        // Persist to IndexedDB
-        const { saveToStorage } = get();
-        saveToStorage();
+        get().saveToStorage();
       },
 
+      /**
+       * Retrieves configuration for a specific day, falling back to global config
+       */
       getDayConfig: (dateKey: string): DayConfig => {
         const { dayConfigs, globalConfig } = get();
         return dayConfigs[dateKey] || globalConfig;
       },
 
+      /**
+       * Removes day-specific configuration, reverting to global defaults
+       */
       resetDayConfig: (dateKey: string) => {
         set((state) => {
           delete state.dayConfigs[dateKey];
         });
-
-        // Persist to IndexedDB
-        const { saveToStorage } = get();
-        saveToStorage();
+        get().saveToStorage();
       },
 
       updateTaskForm: (updates: Partial<TaskFormState>) => {
@@ -225,6 +223,10 @@ export const usePlannerStore = create<PlannerState>()(
         });
       },
 
+      /**
+       * Validates and adds a new task to the current day's schedule
+       * Handles time validation, conflict detection, and automatic storage
+       */
       addTask: async () => {
         const {
           taskForm,
@@ -237,8 +239,6 @@ export const usePlannerStore = create<PlannerState>()(
 
         const dateKey = formatDateKey(currentDate);
         const dayConfig = getDayConfig(dateKey);
-
-        // Validation
         const trimmedName = taskForm.taskName.trim();
         if (!trimmedName) {
           set((state) => {

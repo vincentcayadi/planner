@@ -17,23 +17,24 @@ import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Plus } from 'lucide-react';
 
+/**
+ * Form component for creating new tasks with time selection and validation
+ */
 export function TaskForm() {
   const { taskForm, currentDate, getDayConfig, updateTaskForm, addTask, resetTaskForm } = usePlannerStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get day-specific config
   const dateKey = formatDateKey(currentDate);
   const dayConfig = getDayConfig(dateKey);
-
-  // Calculate derived values
   const startMinutes = timeToMinutes(taskForm.taskStartTime);
   const durationMinutes = parseInt(taskForm.taskDuration, 10) || 0;
   const endMinutes = startMinutes + durationMinutes;
   const calculatedEndTime = minutesToTime(endMinutes);
-
-  // Use calculated end time if taskEndTime is not set
   const displayEndTime = taskForm.taskEndTime || calculatedEndTime;
 
+  /**
+   * Handles task submission with loading state management
+   */
   const handleAddTask = async () => {
     if (isSubmitting) return;
 

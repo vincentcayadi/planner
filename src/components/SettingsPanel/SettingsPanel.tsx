@@ -17,7 +17,7 @@ import {
 import { usePlannerStore } from '@/stores/plannerStore';
 import { formatDateKey } from '@/lib/utils/time';
 import { toast } from 'sonner';
-import type { PlannerExport } from '@/lib/types';
+import type { PlannerExport, DayConfig } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload } from 'lucide-react';
@@ -49,12 +49,18 @@ type FSWin = Window &
     showOpenFilePicker?: (opts?: FilePickerOptions) => Promise<FileSystemFileHandle[]>;
   };
 
+/**
+ * Settings panel component for managing planner configuration.
+ * Supports both global settings and per-day customizations.
+ */
 export function SettingsPanel() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  const [applyToCurrentDayOnly, setApplyToCurrentDayOnly] = useState(false);
+  // Pending changes state for action buttons
+  const [pendingChanges, setPendingChanges] = useState<Partial<DayConfig> | null>(null);
+  const [tempConfig, setTempConfig] = useState<DayConfig | null>(null);
 
   const {
     currentDate,
@@ -67,27 +73,63 @@ export function SettingsPanel() {
     importData
   } = usePlannerStore();
 
-  // Get current day configuration
   const dateKey = formatDateKey(currentDate);
   const dayConfig = getDayConfig(dateKey);
   const hasCustomDayConfig = JSON.stringify(dayConfig) !== JSON.stringify(globalConfig);
+
+  // Use temp config if available, otherwise use actual day config
+  const displayConfig = tempConfig || dayConfig;
 
   // Check for File System Access API support
   const w: FSWin | undefined = typeof window !== 'undefined' ? (window as FSWin) : undefined;
   const supportsFileSystemAPI = !!(w?.showSaveFilePicker && w?.showOpenFilePicker);
 
-  // Configuration update handlers
-  const handleConfigUpdate = (config: Partial<typeof dayConfig>) => {
-    if (applyToCurrentDayOnly) {
-      updateDayConfig(dateKey, config);
-    } else {
-      updateGlobalConfig(config);
+  /**
+   * Handles input changes and shows action buttons for confirmation
+   */
+  const handleConfigChange = (config: Partial<DayConfig>) => {
+    const newConfig = { ...displayConfig, ...config };
+    setTempConfig(newConfig);
+    setPendingChanges({ ...pendingChanges, ...config });
+  };
+
+  /**
+   * Applies changes to current day only
+   */
+  const applyToCurrentDay = () => {
+    if (pendingChanges) {
+      updateDayConfig(dateKey, pendingChanges);
+      toast.success('Settings applied to current day only');
+      cancelChanges();
     }
   };
 
+  /**
+   * Applies changes globally to all days (warning action)
+   */
+  const applyToAllDays = () => {
+    if (pendingChanges) {
+      updateGlobalConfig(pendingChanges);
+      toast.success('Settings applied to all days');
+      cancelChanges();
+    }
+  };
+
+  /**
+   * Cancels pending changes and reverts to actual config
+   */
+  const cancelChanges = () => {
+    setPendingChanges(null);
+    setTempConfig(null);
+  };
+
+  /**
+   * Resets current day to use global defaults
+   */
   const handleResetDayConfig = () => {
     resetDayConfig(dateKey);
     toast.success('Day configuration reset to default');
+    cancelChanges();
   };
 
   const handleExportData = async () => {
@@ -240,8 +282,8 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">Start</Label>
               <Input
                 type="time"
-                value={dayConfig.startTime}
-                onChange={(e) => handleConfigUpdate({ startTime: e.target.value })}
+                value={displayConfig.startTime}
+                onChange={(e) => handleConfigChange({ startTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
@@ -249,8 +291,8 @@ export function SettingsPanel() {
               <Label className="mb-1 block text-xs text-neutral-500">End</Label>
               <Input
                 type="time"
-                value={dayConfig.endTime}
-                onChange={(e) => handleConfigUpdate({ endTime: e.target.value })}
+                value={displayConfig.endTime}
+                onChange={(e) => handleConfigChange({ endTime: e.target.value })}
                 className="[appearance:textfield] pr-3 text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
@@ -259,8 +301,8 @@ export function SettingsPanel() {
           <div>
             <Label className="mb-1 block text-xs text-neutral-500">Interval (minutes)</Label>
             <Select
-              value={String(dayConfig.interval)}
-              onValueChange={(v) => handleConfigUpdate({ interval: Number(v) })}
+              value={String(displayConfig.interval)}
+              onValueChange={(v) => handleConfigChange({ interval: Number(v) })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select interval" />
@@ -273,33 +315,60 @@ export function SettingsPanel() {
             </Select>
           </div>
 
-          <div className="space-y-2 border-t pt-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs text-neutral-500">Apply to current day only</Label>
-              <Switch
-                checked={applyToCurrentDayOnly}
-                onCheckedChange={setApplyToCurrentDayOnly}
-              />
-            </div>
-
-            {hasCustomDayConfig && (
+          {/* Action buttons when changes are pending */}
+          {pendingChanges && (
+            <div className="space-y-2 border-t pt-3 bg-neutral-50 rounded-md p-3">
+              <div className="text-xs text-neutral-600 font-medium">Apply changes to:</div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={applyToCurrentDay}
+                  size="sm"
+                  className="text-xs"
+                >
+                  Current Day Only
+                </Button>
+                <Button
+                  onClick={applyToAllDays}
+                  variant="destructive"
+                  size="sm"
+                  className="text-xs"
+                >
+                  All Days
+                </Button>
+              </div>
               <Button
-                variant="outline"
+                onClick={cancelChanges}
+                variant="ghost"
                 size="sm"
-                onClick={handleResetDayConfig}
                 className="w-full text-xs"
               >
-                Reset to Default Times
+                Cancel Changes
               </Button>
-            )}
-
-            <div className="text-xs text-neutral-400">
-              {hasCustomDayConfig
-                ? `This day has custom times (${dayConfig.startTime} - ${dayConfig.endTime})`
-                : 'Using default times for this day'
-              }
             </div>
-          </div>
+          )}
+
+          {/* Day status and reset option */}
+          {!pendingChanges && (
+            <div className="space-y-2 border-t pt-3">
+              {hasCustomDayConfig && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetDayConfig}
+                  className="w-full text-xs"
+                >
+                  Reset to Default Times
+                </Button>
+              )}
+
+              <div className="text-xs text-neutral-400">
+                {hasCustomDayConfig
+                  ? `This day has custom times (${dayConfig.startTime} - ${dayConfig.endTime})`
+                  : 'Using default times for this day'
+                }
+              </div>
+            </div>
+          )}
 
           <div>
             <Label className="mb-2 block text-xs text-neutral-500">Data Management</Label>

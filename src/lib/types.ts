@@ -1,7 +1,12 @@
-// src/lib/types/index.ts
+/**
+ * Type definitions and validation schemas for the planner application
+ * Uses Zod for runtime validation and type safety
+ */
 import { z } from 'zod';
 
-// Base validation schemas
+/**
+ * Time format validation (HH:MM in 24-hour format)
+ */
 export const TimeSchema = z
   .string()
   .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format. Expected HH:MM');
