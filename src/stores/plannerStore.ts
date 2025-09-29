@@ -95,7 +95,7 @@ const initialTaskForm: TaskFormState = {
   taskDesc: '',
   taskStartTime: '08:00',
   taskDuration: '60',
-  taskEndTime: '09:00',
+  taskEndTime: '',
   selectedColor: 'blue',
   nameError: false,
   useDurationMode: true,
@@ -169,15 +169,11 @@ export const usePlannerStore = create<PlannerState>()(
       resetTaskForm: () => {
         set((state) => {
           const { plannerConfig } = get();
-          const startMinutes = timeToMinutes(plannerConfig.startTime);
-          const durationMinutes = parseInt(initialTaskForm.taskDuration, 10);
-          const endMinutes = startMinutes + durationMinutes;
-          const endTime = minutesToTime(endMinutes);
 
           state.taskForm = {
             ...initialTaskForm,
             taskStartTime: plannerConfig.startTime,
-            taskEndTime: endTime,
+            taskEndTime: '',
           };
         });
       },

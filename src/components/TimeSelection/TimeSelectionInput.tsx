@@ -84,18 +84,26 @@ export function TimeSelectionInput({
     setCustomDuration(value);
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue > 0) {
-      // Snap to nearest interval
+      // Allow free typing - only update duration without snapping
+      const clampedDuration = Math.max(1, Math.min(numValue, 1440)); // Max 24 hours, min 1 minute
+      onDurationChange(clampedDuration);
+    }
+  };
+
+  const handleCustomDurationBlur = () => {
+    const numValue = parseInt(customDuration, 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      // Snap to nearest interval on blur
       const snapped = Math.round(numValue / plannerConfig.interval) * plannerConfig.interval;
       const clampedDuration = Math.max(plannerConfig.interval, Math.min(snapped, 1440)); // Max 24 hours
 
-      if (snapped !== numValue && numValue > 0) {
+      if (snapped !== numValue) {
         toast.info('Duration adjusted', {
           description: `${numValue}min → ${clampedDuration}min (snapped to ${plannerConfig.interval}min intervals)`,
         });
         setCustomDuration(clampedDuration.toString());
+        onDurationChange(clampedDuration);
       }
-
-      onDurationChange(clampedDuration);
     }
   };
 
@@ -190,10 +198,10 @@ export function TimeSelectionInput({
       {/* Mode Toggle */}
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Time</Label>
-        <div className="flex items-center space-x-2 [animation:none]">
-          <Label htmlFor="duration-mode" className="text-sm text-neutral-600">
+        <div className="flex items-center gap-2 min-w-[120px] justify-end">
+          <span className="text-sm text-neutral-600 min-w-[60px] text-right">
             {useDurationMode ? 'Duration' : 'End time'}
-          </Label>
+          </span>
           <Switch
             id="duration-mode"
             checked={useDurationMode}
@@ -224,10 +232,11 @@ export function TimeSelectionInput({
                   type="number"
                   value={customDuration}
                   onChange={(e) => handleCustomDurationChange(e.target.value)}
+                  onBlur={handleCustomDurationBlur}
                   placeholder="Minutes"
-                  min={plannerConfig.interval}
+                  min={1}
                   max={1440}
-                  step={plannerConfig.interval}
+                  step={1}
                   className="text-sm"
                 />
                 <Button
