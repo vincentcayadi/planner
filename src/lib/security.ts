@@ -113,27 +113,19 @@ function isValidIPAddress(ip: string): boolean {
   return ipv4Regex.test(ip) || ipv6Regex.test(ip);
 }
 
-// Generate secure random ID
+// Generate secure UUID
 export function generateSecureId(): string {
-  // Generate a secure random string
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-
-  // Use crypto if available (browser/Node.js)
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    for (let i = 0; i < array.length; i++) {
-      result += chars[array[i] % chars.length];
-    }
+  // Use standard UUID v4 format for consistency
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
   } else {
-    // Fallback for environments without crypto
-    for (let i = 0; i < 32; i++) {
-      result += chars[Math.floor(Math.random() * chars.length)];
-    }
+    // Fallback UUID generation for older environments
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
-
-  return result;
 }
 
 // Validate request size

@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { CSP_HEADERS, getClientIP } from '@/lib/security';
-import { isValidTaskId } from '@/lib/types';
+import { isValidId } from '@/lib/types';
 import { shareRateLimit } from '@/lib/security';
 
 
@@ -16,7 +16,7 @@ export async function GET(req: Request, { params }: Ctx): Promise<NextResponse> 
     const { id } = await params;
 
     // Validate ID format
-    if (!id || !isValidTaskId(id)) {
+    if (!id || !isValidId(id)) {
       return NextResponse.json(
         { error: 'Invalid share ID format', code: 'INVALID_ID' },
         { status: 400, headers }
@@ -72,7 +72,7 @@ export async function DELETE(req: Request, { params }: Ctx): Promise<NextRespons
     const { id } = await params;
 
     // Validate ID format
-    if (!id || !isValidTaskId(id)) {
+    if (!id || !isValidId(id)) {
       return NextResponse.json(
         { error: 'Invalid share ID format', code: 'INVALID_ID' },
         { status: 400, headers }

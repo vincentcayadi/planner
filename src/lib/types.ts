@@ -224,10 +224,8 @@ export const isValidDateKey = (value: string): value is DateKey => {
   return DateKeySchema.safeParse(value).success;
 };
 
-export const isValidTaskId = (value: string): boolean => {
-  // Accept both UUID format and secure random string format (32 chars alphanumeric)
-  return z.string().uuid().safeParse(value).success ||
-         z.string().regex(/^[A-Za-z0-9]{32}$/).safeParse(value).success;
+export const isValidId = (value: string): boolean => {
+  return z.string().uuid().safeParse(value).success;
 };
 
 export const isValidTimeString = (value: string): value is TimeHHMM => {
