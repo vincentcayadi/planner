@@ -150,6 +150,68 @@ TTL: 24 hours
 - **Loading States**: Comprehensive loading indicators
 - **Error Boundaries**: Better error handling throughout the app
 
+## September 2025 Major Updates
+
+### Calendar-16 Integration
+- **Unified Date/Time Picker**: Replaced separate calendar and time inputs with integrated Calendar-16 component
+- **Consistent UI**: Side-by-side start/end time inputs with proper grid layout
+- **Mobile Responsive**: Touch-friendly interface with swipe gestures
+
+### Global Settings System
+- **Hierarchical Configuration**: Global defaults with per-day overrides
+- **Auto-save**: Debounced auto-save with 300ms delay using custom hooks
+- **Conflict Detection**: Smart handling of settings changes that affect existing tasks
+- **Settings Dialog**: Modal interface for global settings management
+
+### Auto-save Implementation
+- **Removed Action Buttons**: Eliminated manual save buttons in favor of automatic saving
+- **Toast Notifications**: Real-time feedback using Sonner for all operations
+- **Debouncing**: Optimized save frequency to prevent excessive API calls
+- **Loading States**: Visual indicators during save operations
+
+### Mobile Responsiveness
+- **Touch Interactions**: Swipe gestures for sidebar navigation
+- **Responsive Grid**: Adaptive layouts for different screen sizes
+- **Mobile-first Design**: Bottom-up responsive approach
+- **Gesture Controls**: Drag-to-close sidebar functionality
+
+### Code Quality Improvements
+- **TypeScript Strict Mode**: Full strict mode compliance with proper type safety
+- **Import Cleanup**: Removed unused imports and fixed inconsistent React import patterns
+- **Type Safety**: Consistent Props interface naming (`ComponentNameProps` pattern)
+- **CSS Abstraction**: Moved repeated Tailwind patterns to global CSS classes
+- **Interval Consistency**: Shared constants for time interval options across components
+
+### Bug Fixes
+- **Layout Shifts**: Fixed task form duration toggle causing UI shifts
+- **Duration Filtering**: Dynamic duration options based on selected interval
+- **Color Background**: Fixed modify task dialog background color issues
+- **Padding Consistency**: Resolved first task padding inconsistency in schedule view
+- **State Synchronization**: Fixed edit dialog state sync issues
+
+### Performance Optimizations
+- **Component Memoization**: Optimized re-renders with useCallback and useMemo
+- **Stable Layouts**: Prevented layout shifts with fixed-width components
+- **Bundle Optimization**: Cleaner imports and reduced bundle size
+
+### Technical Debt & Known Issues
+- **ErrorBoundary Class Component**: Violates "no class components" rule but required for React Error Boundaries (no hook equivalent exists yet)
+- **TODO Comments**: 4 incomplete implementations in error handling and task conflict resolution
+- **Console Logging**: 5 console.error statements should be replaced with structured logging system
+- **Type Safety**: All components follow consistent `ComponentNameProps` interface naming pattern
+
+## Developer Documentation
+
+### Quick Reference Files
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Complete guide for new developers, common tasks, and patterns
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Comprehensive API documentation for store functions and utilities
+- **[architecture.md](architecture.md)** - This file: system overview and design decisions
+
+### Getting Started
+1. Read DEVELOPER_GUIDE.md for concepts and patterns
+2. Reference API_REFERENCE.md for specific function signatures
+3. See src/lib/types.ts for complete TypeScript definitions
+
 ## Future Architecture Considerations
 
 ### Scalability

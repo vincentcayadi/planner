@@ -10,13 +10,23 @@ export const formatDateKey = (d: Date): string => {
   return `${y}-${m}-${day}`;
 };
 
-/** "HH:MM" -> total minutes from 00:00 */
+/**
+ * Converts time string to total minutes since midnight
+ * @param t - Time in "HH:MM" format (24-hour)
+ * @returns Total minutes since 00:00 (e.g., "09:30" returns 570)
+ * @example timeToMinutes("09:30") // 570
+ */
 export const timeToMinutes = (t: string): number => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 };
 
-/** total minutes -> "HH:MM" (24h) */
+/**
+ * Converts total minutes to time string
+ * @param mins - Total minutes since midnight
+ * @returns Time string in "HH:MM" format (24-hour)
+ * @example minutesToTime(570) // "09:30"
+ */
 export const minutesToTime = (mins: number): string => {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -32,7 +42,15 @@ export const to12h = (t: string): string => {
   return `${h12}:${String(M).padStart(2, '0')} ${ampm}`;
 };
 
-/** Open interval overlap check in minutes. */
+/**
+ * Checks if two time intervals overlap (open interval check)
+ * @param aStart - Start time of first interval in minutes
+ * @param aEnd - End time of first interval in minutes
+ * @param bStart - Start time of second interval in minutes
+ * @param bEnd - End time of second interval in minutes
+ * @returns true if intervals overlap, false otherwise
+ * @example overlaps(570, 630, 600, 660) // true (9:30-10:30 overlaps with 10:00-11:00)
+ */
 export const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number): boolean =>
   aStart < bEnd && bStart < aEnd;
 

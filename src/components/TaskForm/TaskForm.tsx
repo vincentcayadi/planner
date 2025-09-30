@@ -105,14 +105,12 @@ export function TaskForm() {
     const newStartMinutes = timeToMinutes(newStart);
 
     if (taskForm.useDurationMode) {
-      // Keep duration, update end time
       const newEndMinutes = newStartMinutes + durationMinutes;
       updateTaskForm({
         taskStartTime: newStart,
         taskEndTime: minutesToTime(newEndMinutes),
       });
     } else {
-      // Keep end time, update duration
       const endMinutes = timeToMinutes(taskForm.taskEndTime || displayEndTime);
       const newDuration = Math.max(dayConfig.interval, endMinutes - newStartMinutes);
       updateTaskForm({
@@ -151,7 +149,6 @@ export function TaskForm() {
     const validDurations = generateDurationOptions.map((opt) => parseInt(opt.value, 10));
 
     if (currentDuration > 0 && !validDurations.includes(currentDuration)) {
-      // Default to the first option (smallest interval)
       const defaultDuration = validDurations[0];
       if (defaultDuration) {
         handleDurationChange(defaultDuration);

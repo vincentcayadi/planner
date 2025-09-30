@@ -292,7 +292,6 @@ export const usePlannerStore = create<PlannerState>()(
           return { success: false, error: 'Time conflict detected' };
         }
 
-        // Add task
         set((state) => {
           if (!state.schedules[dateKey]) {
             state.schedules[dateKey] = [];
@@ -372,6 +371,11 @@ export const usePlannerStore = create<PlannerState>()(
         get().closeClearAllDialog();
       },
 
+      /**
+       * Automatically fills gaps between scheduled tasks with "Break" tasks
+       * Removes existing breaks first to prevent duplicates and enable re-calculation
+       * Creates breaks for gaps between tasks and at the beginning/end of the day
+       */
       autoFillBreaks: () => {
         const { currentDate, getDayConfig, getCurrentSchedule } = get();
         const dateKey = formatDateKey(currentDate);
@@ -572,6 +576,13 @@ export const usePlannerStore = create<PlannerState>()(
         return schedules[dateKey] || [];
       },
 
+      /**
+       * Finds all tasks that overlap with the given time range
+       * @param startTime - Start time in "HH:MM" format
+       * @param endTime - End time in "HH:MM" format
+       * @param excludeId - Optional task ID to exclude from conflict check (useful when editing existing tasks)
+       * @returns Array of conflicting tasks
+       */
       findConflictingTasks: (startTime: string, endTime: string, excludeId?: string) => {
         const currentSchedule = get().getCurrentSchedule();
         const startMinutes = timeToMinutes(startTime);
@@ -587,6 +598,12 @@ export const usePlannerStore = create<PlannerState>()(
         });
       },
 
+      /**
+       * Checks if changing a day's time boundaries would conflict with existing tasks
+       * @param dateKey - Date in YYYY-MM-DD format
+       * @param newConfig - New day configuration with updated time boundaries
+       * @returns Array of tasks that would be outside the new time boundaries
+       */
       checkDayConfigConflicts: (dateKey: string, newConfig: DayConfig) => {
         const { schedules } = get();
         const dayTasks = schedules[dateKey] || [];
