@@ -3,7 +3,6 @@
 
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Calendar16 from '@/components/calendar-16';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +22,7 @@ import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Download, Upload, Settings } from 'lucide-react';
 import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
+import { INTERVAL_OPTIONS } from '@/lib/constants/intervals';
 import {
   SettingsConfirmationDialog,
   type ConfirmationType,
@@ -346,9 +346,11 @@ export function SettingsPanel() {
                 <SelectValue placeholder="Select interval" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 minutes</SelectItem>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">60 minutes</SelectItem>
+                {INTERVAL_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

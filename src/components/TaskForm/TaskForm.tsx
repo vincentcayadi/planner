@@ -1,7 +1,7 @@
 // src/components/TaskForm/TaskForm.tsx
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,20 +79,6 @@ export function TaskForm() {
     }));
   }, [dayConfig.interval]);
 
-  // Auto-select first available duration if current one is invalid
-  React.useEffect(() => {
-    const currentDuration = parseInt(taskForm.taskDuration, 10);
-    const validDurations = generateDurationOptions.map((opt) => parseInt(opt.value, 10));
-
-    if (currentDuration > 0 && !validDurations.includes(currentDuration)) {
-      // Default to the first option (smallest interval)
-      const defaultDuration = validDurations[0];
-      if (defaultDuration) {
-        handleDurationChange(defaultDuration);
-      }
-    }
-  }, [dayConfig.interval]);
-
   /**
    * Handles task submission with loading state management
    */
@@ -146,18 +132,32 @@ export function TaskForm() {
     });
   };
 
-  const handleDurationChange = (duration: number) => {
+  const handleDurationChange = useCallback((duration: number) => {
     const newEndMinutes = startMinutes + duration;
 
     updateTaskForm({
       taskDuration: String(duration),
       taskEndTime: minutesToTime(newEndMinutes),
     });
-  };
+  }, [startMinutes, updateTaskForm]);
 
   const toggleDurationMode = () => {
     updateTaskForm({ useDurationMode: !taskForm.useDurationMode });
   };
+
+  // Auto-select first available duration if current one is invalid
+  React.useEffect(() => {
+    const currentDuration = parseInt(taskForm.taskDuration, 10);
+    const validDurations = generateDurationOptions.map((opt) => parseInt(opt.value, 10));
+
+    if (currentDuration > 0 && !validDurations.includes(currentDuration)) {
+      // Default to the first option (smallest interval)
+      const defaultDuration = validDurations[0];
+      if (defaultDuration) {
+        handleDurationChange(defaultDuration);
+      }
+    }
+  }, [dayConfig.interval, generateDurationOptions, handleDurationChange, taskForm.taskDuration]);
 
   return (
     <Card className="gap-0" data-task-form>

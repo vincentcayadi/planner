@@ -21,6 +21,7 @@ import { usePlannerStore } from '@/stores/plannerStore';
 import { useAutoSave, DEBOUNCE_DELAYS } from '@/lib/debounce';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { INTERVAL_OPTIONS } from '@/lib/constants/intervals';
 import type { PlannerConfig } from '@/lib/types';
 
 interface GlobalSettingsDialogProps {
@@ -137,9 +138,11 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
                 <SelectValue placeholder="Select default interval" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 minutes</SelectItem>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">60 minutes</SelectItem>
+                {INTERVAL_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <p className="mt-2 text-xs text-neutral-500">

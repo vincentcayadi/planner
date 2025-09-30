@@ -1,7 +1,7 @@
 // src/components/ScheduleView/ScheduleView.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { COLORS } from '@/lib/colorConstants';
@@ -19,13 +19,13 @@ interface ScheduleDisplayRow {
 
 export function ScheduleView() {
   const { currentDate, getDayConfig, schedules, updateTaskForm } = usePlannerStore();
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Get day-specific config
   const dateKey = formatDateKey(currentDate);
   const dayConfig = getDayConfig(dateKey);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
