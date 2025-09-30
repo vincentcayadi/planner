@@ -110,19 +110,9 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                   {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                 </div>
               </div>
-              <div className="space-y-1">
-                <h1 className="text-base md:text-lg font-semibold text-neutral-800">
-                  {date.toLocaleDateString(undefined, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </h1>
-                <p className="text-xs text-neutral-600">
-                  {to12h(planner.startTime)} – {to12h(planner.endTime)} · {planner.interval}m intervals · Read-only view
-                </p>
-              </div>
+              <p className="text-xs text-neutral-600">
+                Read-only view
+              </p>
             </CardHeader>
 
             <CardContent className="flex flex-1 flex-col overflow-y-auto p-0">
