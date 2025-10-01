@@ -22,7 +22,8 @@ export function TaskList() {
     setSharedLink,
     getSharedLink,
     removeSharedLink,
-    currentDate
+    currentDate,
+    getDayConfig
   } = usePlannerStore();
 
   const [isSharing, setIsSharing] = useState(false);
@@ -117,13 +118,14 @@ export function TaskList() {
         }
       }
 
-      // Get global config and user preferences from store for sharing
-      const { globalConfig, userPreferences } = usePlannerStore.getState();
+      // Get day-specific config and user preferences from store for sharing
+      const { userPreferences } = usePlannerStore.getState();
+      const dayConfig = getDayConfig(currentDateKey);
 
       const payload = {
         dateKey: currentDateKey,
         items,
-        planner: globalConfig,
+        planner: dayConfig,
         userName: userPreferences.name,
       };
 
