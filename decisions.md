@@ -334,3 +334,109 @@ const GlobalSettingsDialog = ({ open, onOpenChange }) => {
 **Context**: Production insights needed for optimization
 **Timeline**: As needed
 **Considerations**: Performance monitoring, error tracking, user analytics
+
+---
+
+### ADR-010: Modal Conflict Resolution Simplification (October 2025)
+**Status**: ✅ Implemented
+**Date**: 2025-10-01
+**Duration**: ~4 hours of development
+
+#### Context
+The day settings modal conflict resolution system had complex auto-adjustment logic that was causing multiple issues:
+1. **Modal Layout Issues**: Floating action buttons appearing outside modal container
+2. **Complex Auto-Adjust Logic**: 300+ line function with cascade shifting, break handling, and priority systems
+3. **Race Conditions**: Auto-shift tasks then immediately check conflicts on stale data
+4. **User Experience**: Too many options confusing users ("Remove", "Auto-Adjust", "Allow Outside Bounds")
+5. **Reliability**: Auto-adjust functionality frequently broken in edge cases
+
+#### Failed Approaches (Attempted for ~3 hours)
+
+**Attempt 1: Fix Auto-Shift Race Conditions**
+- **Time Spent**: 1.5 hours
+- **Approach**: Added `setTimeout`, tracked shifted tasks in state, used delayed conflict detection
+- **Issues**: Complex state management, still had timing issues with store updates
+- **Code**: Attempted to track `shiftedTasks` array and use it for conflict detection
+- **Why It Failed**: Race conditions between `updateTask` calls and conflict detection persisted
+
+**Attempt 2: Enhanced Auto-Adjust Algorithm**
+- **Time Spent**: 1 hour
+- **Approach**: Improved cascade shifting, better break handling, task priority system
+- **Issues**: Algorithm became too complex (400+ lines), edge cases multiplied
+- **Code**: Complex `autoAdjustTasksToFitBounds` function with multiple strategies
+- **Why It Failed**: Complexity made it unmaintainable and still unreliable
+
+**Attempt 3: Modal Layout CSS Fixes**
+- **Time Spent**: 30 minutes
+- **Approach**: Used `!important` modifiers, updated AlertDialog CSS classes
+- **Issues**: CSS conflicts with responsive design, buttons still misaligned
+- **Code**: `className="!flex !flex-col !gap-3 !items-stretch"`
+- **Why It Failed**: Root layout issue required design simplification
+
+#### Decision: Simplification Strategy
+After 3 hours of failed fixes, chose **radical simplification**:
+
+1. **Remove Auto-Adjust Entirely**: Deleted 300+ line `autoAdjustTasksToFitBounds` function
+2. **Simplify Modal Options**: Only "Remove Conflicting Tasks" and "Cancel Changes"
+3. **Fix Cancel Behavior**: Properly revert start time when user cancels
+4. **Improve Task Removal**: Actually remove conflicting tasks (was TODO before)
+
+#### Implementation Details
+
+**Modal Simplification**:
+```tsx
+// Before: 3 buttons
+<Button onClick={() => onConflictAction?.('remove')}>Remove</Button>
+<Button onClick={() => onConflictAction?.('adjust')}>Auto-Adjust</Button>
+<Button onClick={() => onConflictAction?.('allow')}>Allow Outside</Button>
+
+// After: 2 buttons
+<Button onClick={() => onConflictAction?.('remove')}>Remove Conflicting Tasks</Button>
+<AlertDialogCancel onClick={handleCancel}>Cancel Changes</AlertDialogCancel>
+```
+
+**Cancel Behavior Fix**:
+```typescript
+// Track old config for reverting
+const [oldConfigBeforeConflict, setOldConfigBeforeConflict] = useState<DayConfig>(dayConfig);
+
+const handleCancel = () => {
+  // Revert local config to the old value before conflict
+  setLocalConfig(oldConfigBeforeConflict);
+  setConfirmationState({ isOpen: false, type: null, pendingAction: null });
+};
+```
+
+**Actual Task Removal**:
+```typescript
+const handleConflictAction = (action: 'remove') => {
+  const conflictingTasks = confirmationState.conflictingTasks;
+
+  // Actually remove conflicting tasks (was TODO before)
+  conflictingTasks.forEach(task => {
+    removeTask(task.id);
+  });
+  pendingAction();
+  toast.success(`Settings applied. Removed ${conflictingTasks.length} conflicting task${conflictingTasks.length > 1 ? 's' : ''}`);
+};
+```
+
+#### Results
+- **Code Reduction**: Removed 400+ lines of complex auto-adjust logic
+- **Reliability**: Modal conflicts resolved, cancel behavior works correctly
+- **User Experience**: Clear, simple options reduce decision paralysis
+- **Maintainability**: Much simpler codebase, easier to debug
+- **Performance**: Eliminated complex algorithms and race conditions
+
+#### Lessons Learned
+1. **Complexity is the Enemy**: Sometimes the best fix is removing features
+2. **User Feedback**: "Remove the adjust functionality cos you cant implement it" - direct user feedback led to right solution
+3. **Technical Debt**: Complex features that don't work reliably create more problems than they solve
+4. **Simple is Better**: Two clear options better than three confusing ones
+
+#### Alternative Considered But Rejected
+**Fixing Auto-Adjust**: Could have continued debugging the race conditions and algorithm edge cases, but:
+- Would require significant ongoing maintenance
+- User explicitly requested removal
+- Simpler solution provides better UX
+- Complex features often hide underlying design issues

@@ -28,7 +28,7 @@ interface SettingsConfirmationDialogProps {
   confirmationState: ConfirmationState;
   onConfirm: () => void;
   onCancel: () => void;
-  onConflictAction?: (action: 'remove' | 'adjust' | 'allow') => void;
+  onConflictAction?: (action: 'remove') => void;
 }
 
 const getDialogContent = (type: ConfirmationType | null) => {
@@ -121,30 +121,14 @@ export function SettingsConfirmationDialog({
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col space-y-2">
-            <div className="flex flex-col w-full space-y-2">
-              <Button
-                onClick={() => onConflictAction?.('remove')}
-                variant="destructive"
-                className="w-full"
-              >
-                Remove Conflicting Tasks
-              </Button>
-              <Button
-                onClick={() => onConflictAction?.('adjust')}
-                variant="default"
-                className="w-full"
-              >
-                Auto-Adjust Tasks to Fit
-              </Button>
-              <Button
-                onClick={() => onConflictAction?.('allow')}
-                variant="outline"
-                className="w-full"
-              >
-                Allow Tasks Outside Bounds
-              </Button>
-            </div>
+          <AlertDialogFooter className="!flex !flex-col !gap-3 !items-stretch">
+            <Button
+              onClick={() => onConflictAction?.('remove')}
+              variant="destructive"
+              className="w-full text-white"
+            >
+              Remove Conflicting Tasks
+            </Button>
             <AlertDialogCancel onClick={onCancel} className="w-full">
               Cancel Changes
             </AlertDialogCancel>

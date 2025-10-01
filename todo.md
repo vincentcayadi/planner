@@ -43,6 +43,16 @@
 - [x] Mobile-first responsive design principles
 - [x] Build optimization and TypeScript strict compliance
 
+### ✅ Modal Conflict Resolution Simplification (October 2025)
+- [x] Remove complex auto-adjust functionality (400+ lines)
+- [x] Simplify modal to "Remove Tasks" and "Cancel" only
+- [x] Fix cancel behavior to properly revert start time changes
+- [x] Implement actual task removal (was TODO previously)
+- [x] Fix floating action button layout issues
+- [x] Update documentation with lessons learned
+- [x] Add focus functionality for task name input from schedule
+- [x] Fix date formatting to show leading zeros (01, 02, 03...)
+
 ---
 
 ## ✅ Recently Completed

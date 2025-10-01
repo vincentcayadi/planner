@@ -100,6 +100,7 @@ export function SettingsPanel() {
     exportData,
     importData,
     checkDayConfigConflicts,
+    removeTask,
   } = usePlannerStore();
 
   const dateKey = formatDateKey(currentDate);
@@ -107,10 +108,12 @@ export function SettingsPanel() {
   const hasCustomDayConfig = JSON.stringify(dayConfig) !== JSON.stringify(globalConfig);
 
   const [localConfig, setLocalConfig] = useState<DayConfig>(dayConfig);
+  const [oldConfigBeforeConflict, setOldConfigBeforeConflict] = useState<DayConfig>(dayConfig);
 
   // Sync local config when date changes
   React.useEffect(() => {
     setLocalConfig(dayConfig);
+    setOldConfigBeforeConflict(dayConfig);
   }, [dateKey, dayConfig]);
 
   // Check for File System Access API support
@@ -122,12 +125,16 @@ export function SettingsPanel() {
    */
   const handleConfigChange = (config: Partial<DayConfig>) => {
     const newConfig = { ...localConfig, ...config };
-    setLocalConfig(newConfig);
 
     // Check for conflicts before saving
     const conflicts = checkDayConfigConflicts(dateKey, newConfig);
 
     if (conflicts.length > 0) {
+      // Save the old config for potential revert
+      setOldConfigBeforeConflict(localConfig);
+      // Update local config to show the new value in UI
+      setLocalConfig(newConfig);
+
       setConfirmationState({
         isOpen: true,
         type: 'DAY_CONFIG_CONFLICTS',
@@ -138,6 +145,7 @@ export function SettingsPanel() {
     }
 
     // Auto-save if no conflicts
+    setLocalConfig(newConfig);
     autoSaveDayConfig(newConfig);
   };
 
@@ -153,32 +161,27 @@ export function SettingsPanel() {
   /**
    * Handles conflict resolution actions
    */
-  const handleConflictAction = (action: 'remove' | 'adjust' | 'allow') => {
+  const handleConflictAction = (action: 'remove') => {
     const pendingAction = confirmationState.pendingAction;
-    if (!pendingAction) return;
+    const conflictingTasks = confirmationState.conflictingTasks;
+    if (!pendingAction || !conflictingTasks) return;
 
-    switch (action) {
-      case 'remove':
-        // Remove conflicting tasks and apply config
-        // TODO: Implement task removal logic
-        pendingAction();
-        toast.success('Settings applied with conflicting tasks removed');
-        break;
+    // Remove conflicting tasks and apply config
+    conflictingTasks.forEach(task => {
+      removeTask(task.id);
+    });
+    pendingAction();
+    toast.success(`Settings applied. Removed ${conflictingTasks.length} conflicting task${conflictingTasks.length > 1 ? 's' : ''}`);
 
-      case 'adjust':
-        // Auto-adjust tasks to fit within new bounds
-        // TODO: Implement task adjustment logic
-        pendingAction();
-        toast.success('Settings applied with tasks auto-adjusted');
-        break;
+    setConfirmationState({ isOpen: false, type: null, pendingAction: null });
+  };
 
-      case 'allow':
-        // Allow tasks outside bounds
-        pendingAction();
-        toast.success('Settings applied, tasks may be outside day bounds');
-        break;
-    }
-
+  /**
+   * Handle cancel - revert to old config values
+   */
+  const handleCancel = () => {
+    // Revert local config to the old value before conflict
+    setLocalConfig(oldConfigBeforeConflict);
     setConfirmationState({ isOpen: false, type: null, pendingAction: null });
   };
 
@@ -449,9 +452,7 @@ export function SettingsPanel() {
           confirmationState.pendingAction?.();
           setConfirmationState({ isOpen: false, type: null, pendingAction: null });
         }}
-        onCancel={() => {
-          setConfirmationState({ isOpen: false, type: null, pendingAction: null });
-        }}
+        onCancel={handleCancel}
         onConflictAction={handleConflictAction}
       />
 
