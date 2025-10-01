@@ -84,15 +84,11 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   const data = await kv.get<SharedDay>(`share:day:${id}`);
   if (!data) notFound();
 
-  console.log('Share page data:', data);
-
   const planner = data.planner ?? {
     startTime: '08:00',
     endTime: '23:30',
     interval: 30,
   };
-
-  console.log('Share page planner config:', planner);
 
   const rows = getDisplayRows(
     data.items ?? [],
@@ -150,19 +146,20 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                         {to12h(row.time)}
                       </div>
                       <div
-                        className={`p-2 sm:p-4 md:p-6 ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
+                        className={`${row.rowSpan === 1 ? 'p-2 sm:p-3 md:py-4 md:px-4' : 'p-2 sm:p-4 md:py-8 md:px-6'} ${colorConfig?.bg} ${colorConfig?.text} flex flex-col items-center justify-center gap-1 text-center md:gap-2`}
                         style={{
                           minHeight: `${Math.max(row.rowSpan * 44, 44)}px`,
-                          height: `${Math.max(row.rowSpan * 44, 44)}px`,
                         }}
                       >
-                        <div className="text-sm font-semibold sm:text-lg md:text-xl">{row.task!.name}</div>
-                        {row.task!.description && (
-                          <div className="text-xs whitespace-pre-wrap text-neutral-700 line-clamp-2 sm:line-clamp-none md:text-sm">
+                        <div className={`font-semibold ${row.rowSpan === 1 ? 'text-xs sm:text-sm md:text-base' : 'text-sm sm:text-lg md:text-xl'}`}>
+                          {row.task!.name}
+                        </div>
+                        {row.task!.description && row.rowSpan > 1 && (
+                          <div className="line-clamp-2 text-xs whitespace-pre-wrap text-neutral-700 sm:line-clamp-none md:text-sm">
                             {row.task!.description}
                           </div>
                         )}
-                        <div className="text-xs text-neutral-600 sm:text-sm md:text-sm">
+                        <div className={`text-neutral-600 ${row.rowSpan === 1 ? 'text-xs' : 'text-xs sm:text-sm md:text-sm'}`}>
                           {to12h(row.task!.startTime)} – {to12h(row.task!.endTime)}
                         </div>
                       </div>
