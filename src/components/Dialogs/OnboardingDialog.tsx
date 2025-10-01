@@ -110,7 +110,7 @@ export function OnboardingDialog({ open, onOpenChange }: OnboardingDialogProps) 
       <div className="text-center space-y-2">
         <h2 className="text-lg font-semibold">Welcome to Planner!</h2>
         <p className="text-sm text-neutral-600">
-          Let's set up your account to personalize your experience.
+          Let&apos;s set up your account to personalize your experience.
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export function OnboardingDialog({ open, onOpenChange }: OnboardingDialogProps) 
   const renderCompleteStep = () => (
     <div className="space-y-4">
       <div className="text-center space-y-2">
-        <h2 className="text-lg font-semibold">You're All Set! 🎉</h2>
+        <h2 className="text-lg font-semibold">You&apos;re All Set! 🎉</h2>
         <p className="text-sm text-neutral-600">
           Your preferences have been saved. You can change these anytime in settings.
         </p>
