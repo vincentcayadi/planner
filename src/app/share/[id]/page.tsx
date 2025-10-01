@@ -105,7 +105,7 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
           <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-3 md:pt-6 pb-0 shadow-lg">
             <CardHeader className="px-4 md:px-8 pt-2 pb-4 space-y-2">
               <div className="grid grid-cols-[1fr_auto] items-end leading-none font-bold tracking-tighter text-neutral-500">
-                <div className="text-3xl md:text-5xl">{date.getDate()}</div>
+                <div className="text-3xl md:text-5xl">{String(date.getDate()).padStart(2, '0')}</div>
                 <div className="text-xl md:text-3xl">
                   {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                 </div>

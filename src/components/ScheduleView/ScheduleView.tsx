@@ -34,10 +34,20 @@ export function ScheduleView() {
 
   const handleQuickAdd = (time: string) => {
     updateTaskForm({ taskStartTime: time });
-    // Scroll to task form (we can enhance this later)
+
+    // Scroll to task form and auto-focus task name input
     const taskForm = document.querySelector('[data-task-form]');
     if (taskForm) {
       taskForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Auto-focus the task name input after scroll completes
+      setTimeout(() => {
+        const taskNameInput = document.querySelector('[data-task-name-input]') as HTMLInputElement;
+        if (taskNameInput) {
+          taskNameInput.focus();
+          taskNameInput.select(); // Also select any existing text for easy replacement
+        }
+      }, 500); // Wait for scroll animation to complete
     }
   };
 
@@ -112,7 +122,7 @@ export function ScheduleView() {
   return (
     <Card className="mx-auto flex h-full max-w-3xl flex-col overflow-clip bg-neutral-200/70 pt-3 pb-0 shadow-lg md:pt-6">
       <CardHeader className="grid grid-cols-[1fr_auto] items-end px-4 pt-2 pb-1 leading-none font-bold tracking-tighter text-neutral-500 md:px-8">
-        <div className="text-3xl md:text-5xl">{currentDate.getDate()}</div>
+        <div className="text-3xl md:text-5xl">{String(currentDate.getDate()).padStart(2, '0')}</div>
         <div className="text-xl md:text-3xl">
           {currentDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
         </div>

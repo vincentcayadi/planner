@@ -168,6 +168,7 @@ export function TaskForm() {
             value={taskForm.taskName}
             onChange={(e) => updateTaskForm({ taskName: e.target.value })}
             aria-invalid={taskForm.nameError}
+            data-task-name-input
             className={`${
               taskForm.nameError ? 'border-destructive focus-visible:ring-destructive' : ''
             }`}
