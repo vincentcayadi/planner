@@ -41,6 +41,7 @@ Built with ❤️
 - **UUID-based task IDs** for secure task identification
 - **Error boundaries** with graceful fallback UI
 - **Comprehensive error handling** with user-friendly messages
+- **Persistent user preferences** with secure localStorage integration
 
 ### 💾 Data Management
 - **Local-first storage** using IndexedDB via Dexie - no server required
@@ -193,6 +194,7 @@ src/
 ## 🔧 Recent Improvements
 
 ### Bug Fixes & Enhancements
+- **Fixed user preferences persistence**: User name and onboarding status now survive browser refreshes via localStorage
 - **Fixed onboarding persistence**: Modal no longer reappears on page refresh using sessionStorage
 - **Fixed share page configuration**: Shared schedules now respect custom day-specific time settings
 - **Enhanced visual consistency**: Share page styling matches main schedule view typography and spacing
@@ -200,6 +202,7 @@ src/
 - **Code quality**: Fixed ESLint errors and improved JSX apostrophe handling
 
 ### Technical Improvements
+- **Enhanced state persistence**: User preferences now persist across browser sessions via Zustand partialize function
 - **Session-based modal management**: Prevents onboarding modal from showing repeatedly
 - **Day-specific config sharing**: Share API now sends correct time boundaries for custom days
 - **Responsive typography**: Consistent font scaling across main app and share pages
