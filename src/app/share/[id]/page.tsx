@@ -19,6 +19,7 @@ type SharedDay = {
   dateKey: string; // "YYYY-MM-DD"
   items: Task[];
   planner?: { startTime: string; endTime: string; interval: number };
+  userName?: string;
 };
 
 
@@ -111,7 +112,7 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
               <p className="text-xs text-neutral-600">
-                Read-only view
+                {data.userName ? `${data.userName}'s Schedule - ` : ''}Read-only view
               </p>
             </CardHeader>
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { Task, ColorName, TaskFormState, PlannerConfig, DayConfig, PlannerExport } from '@/lib/types';
+import type { Task, ColorName, TaskFormState, PlannerConfig, DayConfig, PlannerExport, UserPreferences } from '@/lib/types';
 import { formatDateKey, timeToMinutes, minutesToTime, overlaps } from '@/lib/utils/time';
 import Dexie from 'dexie';
 
@@ -26,6 +26,7 @@ interface PlannerState {
   currentDate: Date;
   globalConfig: PlannerConfig;
   dayConfigs: Record<string, DayConfig>;
+  userPreferences: UserPreferences;
   taskForm: TaskFormState;
   conflictDialog: {
     isOpen: boolean;
@@ -58,6 +59,7 @@ interface PlannerState {
   updateDayConfig: (dateKey: string, config: Partial<DayConfig>) => void;
   getDayConfig: (dateKey: string) => DayConfig;
   resetDayConfig: (dateKey: string) => void;
+  updateUserPreferences: (preferences: Partial<UserPreferences>) => void;
   updateTaskForm: (updates: Partial<TaskFormState>) => void;
   resetTaskForm: () => void;
 
@@ -124,6 +126,9 @@ export const usePlannerStore = create<PlannerState>()(
       currentDate: new Date(),
       globalConfig: initialGlobalConfig,
       dayConfigs: {},
+      userPreferences: {
+        hasCompletedOnboarding: false,
+      },
       taskForm: { ...initialTaskForm, taskStartTime: initialGlobalConfig.startTime },
       sharedLinks: {},
 
@@ -164,6 +169,16 @@ export const usePlannerStore = create<PlannerState>()(
           if (config.startTime) {
             state.taskForm.taskStartTime = config.startTime;
           }
+        });
+        get().saveToStorage();
+      },
+
+      /**
+       * Updates user preferences (name, onboarding status, etc.)
+       */
+      updateUserPreferences: (preferences: Partial<UserPreferences>) => {
+        set((state) => {
+          Object.assign(state.userPreferences, preferences);
         });
         get().saveToStorage();
       },
@@ -729,7 +744,7 @@ export const usePlannerStore = create<PlannerState>()(
       },
 
       exportData: (): PlannerExport => {
-        const { schedules, globalConfig } = get();
+        const { schedules, globalConfig, userPreferences } = get();
 
         const days = Object.entries(schedules)
           .map(([dateKey, items]) => ({
@@ -743,6 +758,7 @@ export const usePlannerStore = create<PlannerState>()(
           exportedAt: new Date().toISOString(),
           planner: globalConfig,
           days,
+          userPreferences,
         };
       },
 
@@ -755,6 +771,11 @@ export const usePlannerStore = create<PlannerState>()(
           set((state) => {
             // Update global config
             state.globalConfig = { ...data.planner };
+
+            // Update user preferences if available
+            if (data.userPreferences) {
+              state.userPreferences = { ...state.userPreferences, ...data.userPreferences };
+            }
 
             // Update schedules
             const newSchedules: Record<string, Task[]> = {};

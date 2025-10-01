@@ -117,13 +117,14 @@ export function TaskList() {
         }
       }
 
-      // Get global config from store for sharing
-      const { globalConfig } = usePlannerStore.getState();
+      // Get global config and user preferences from store for sharing
+      const { globalConfig, userPreferences } = usePlannerStore.getState();
 
       const payload = {
         dateKey: currentDateKey,
         items,
         planner: globalConfig,
+        userName: userPreferences.name,
       };
 
       const res = await fetch('/api/share', {

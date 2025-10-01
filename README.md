@@ -20,6 +20,13 @@ Built with ❤️
 - **Comprehensive editing** - modify any task aspect with real-time conflict checking
 - **Bulk operations** - clear all tasks for a day with confirmation dialog
 
+### 👤 User Experience & Personalization
+- **User onboarding** - guided setup for first-time users with optional name collection
+- **Personal preferences** - customizable default schedule settings (start/end time, interval)
+- **Smart skip functionality** - users can skip any onboarding step or entire flow
+- **Personalized sharing** - shared schedules display user name when provided
+- **Post-onboarding editing** - all preferences remain editable through global settings
+
 ### ⚡ Smart Features
 - **Intelligent conflict detection** with visual conflict resolution dialogs
 - **Override protection** - choose to replace conflicting tasks or cancel
@@ -43,6 +50,7 @@ Built with ❤️
 
 ### 🌐 Sharing & Collaboration
 - **One-day share links** - publish read-only schedules with 24-hour expiry
+- **Personalized sharing** - shared schedules can display user name when provided
 - **Secure sharing** via Upstash Redis with automatic cleanup
 - **Public view pages** with responsive design for mobile/desktop
 - **URL-based sharing** - easily send schedule links to others
@@ -93,6 +101,13 @@ Built with ❤️
 
 ## 🕹️ Usage Guide
 
+### First-Time Setup
+- **Onboarding flow**: New users are guided through an optional 3-step setup process
+- **Personal preferences**: Set your name (optional, appears on shared schedules)
+- **Default schedule settings**: Configure your preferred start time, end time, and interval
+- **Skip functionality**: Any step or the entire onboarding can be skipped
+- **Post-setup editing**: All preferences remain editable in global settings
+
 ### Basic Setup
 - **Configure your day**: Set start time, end time, and interval in the settings panel
 - **Navigate dates**: Use the calendar picker or navigation arrows to switch days
@@ -117,6 +132,7 @@ Built with ❤️
 
 ### Sharing Features
 - **Create share link**: Click "Share Today" to generate a public URL
+- **Personalized schedules**: Shared links display your name when provided during onboarding
 - **24-hour expiry**: Shared schedules automatically expire after one day
 - **Read-only access**: Shared links show schedules without editing capabilities
 - **Mobile friendly**: Shared schedules work perfectly on mobile devices
@@ -176,5 +192,50 @@ GPL-3.0-or-later - see LICENSE file for details
 ---
 
 **Built with modern web technologies for a secure, efficient, and delightful planning experience.**
+
+## 🔮 Potential Future Features
+
+### 🎨 Accent Color Customization
+A potential enhancement to further personalize the user experience:
+
+#### Concept
+- **Custom accent colors** - allow users to choose from predefined color themes
+- **System integration** - seamlessly integrate with existing shadcn/ui theming system
+- **Real-time preview** - see color changes immediately in the interface
+- **Cross-component consistency** - accent colors would affect buttons, highlights, and interactive elements
+
+#### Implementation Details
+- **Predefined themes**: 6-8 carefully curated color schemes (blue, green, purple, orange, pink, etc.)
+- **CSS variable system**: Leverage existing `--accent` and `--accent-foreground` variables
+- **User preferences storage**: Store choice in existing user preferences system
+- **Light/dark mode compatibility**: Colors designed to work in both themes
+
+#### Technical Approach
+```typescript
+// Extend UserPreferences type
+interface UserPreferences {
+  name?: string;
+  hasCompletedOnboarding: boolean;
+  accentColor?: 'default' | 'blue' | 'green' | 'purple' | 'orange' | 'pink';
+}
+
+// CSS implementation
+.accent-blue {
+  --accent: oklch(0.6 0.15 240);
+  --accent-foreground: oklch(0.98 0 0);
+}
+```
+
+#### Integration Points
+- **Global Settings Dialog**: Add color picker section
+- **Onboarding Flow**: Optional accent color selection step
+- **CSS Application**: Dynamic class application based on user preference
+- **Export/Import**: Include accent color in backup/restore functionality
+
+#### Estimated Implementation Effort
+- **Difficulty**: ⭐⭐☆☆☆ (Easy to Medium)
+- **Time Estimate**: 2-3 hours
+- **Files to modify**: 3-4 (types, store, GlobalSettings, CSS)
+- **Testing needed**: Color contrast validation, theme switching
 
 **Dawg I let claude fix the code base and damn I was blown away**

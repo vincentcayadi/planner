@@ -30,8 +30,9 @@ interface GlobalSettingsDialogProps {
 }
 
 export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialogProps) {
-  const { globalConfig, updateGlobalConfig, dayConfigs } = usePlannerStore();
+  const { globalConfig, updateGlobalConfig, dayConfigs, userPreferences, updateUserPreferences } = usePlannerStore();
   const [localConfig, setLocalConfig] = useState<PlannerConfig>(globalConfig);
+  const [localName, setLocalName] = useState(userPreferences.name || '');
 
   // Auto-save functionality with debouncing
   const { save: autoSave, isSaving } = useAutoSave((config: PlannerConfig) => {
@@ -41,18 +42,31 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
     });
   }, DEBOUNCE_DELAYS.STANDARD);
 
-  // Sync local config with global config when dialog opens
+  // Auto-save for name changes
+  const { save: autoSaveName } = useAutoSave((name: string) => {
+    updateUserPreferences({ name: name || undefined });
+    toast.success('Name updated');
+  }, DEBOUNCE_DELAYS.STANDARD);
+
+  // Sync local state when dialog opens
   useEffect(() => {
     if (open) {
       setLocalConfig(globalConfig);
+      setLocalName(userPreferences.name || '');
     }
-  }, [open, globalConfig]);
+  }, [open, globalConfig, userPreferences]);
 
   // Handle config changes with auto-save
   const handleConfigChange = (updates: Partial<PlannerConfig>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
     autoSave(newConfig);
+  };
+
+  // Handle name changes with auto-save
+  const handleNameChange = (name: string) => {
+    setLocalName(name);
+    autoSaveName(name);
   };
 
   // Reset to defaults
@@ -82,6 +96,20 @@ export function GlobalSettingsDialog({ open, onOpenChange }: GlobalSettingsDialo
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* User Profile */}
+          <div>
+            <Label className="mb-2 block text-sm font-medium">Your Name</Label>
+            <Input
+              placeholder="Enter your name (optional)"
+              value={localName}
+              onChange={(e) => handleNameChange(e.target.value)}
+              className="text-sm"
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              This will appear on shared schedules
+            </p>
+          </div>
+
           {/* Current Status */}
           <div className="rounded-lg bg-neutral-50 p-4">
             <div className="mb-2 flex items-center justify-between">

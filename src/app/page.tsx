@@ -11,6 +11,7 @@ import { SettingsPanel } from '@/components/SettingsPanel/SettingsPanel';
 import { ConflictDialog } from '@/components/Dialogs/ConflictDialog';
 import { EditTaskDialog } from '@/components/Dialogs/EditTaskDialog';
 import { ClearAllDialog } from '@/components/Dialogs/ClearAllDialog';
+import { OnboardingDialog } from '@/components/Dialogs/OnboardingDialog';
 import { usePlannerStore } from '@/stores/plannerStore';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
@@ -18,13 +19,21 @@ import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PlannerPage() {
-  const { currentDate, setCurrentDate, isLoading, loadFromStorage } = usePlannerStore();
+  const { currentDate, setCurrentDate, isLoading, loadFromStorage, userPreferences } = usePlannerStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Load data from storage on mount
   useEffect(() => {
     loadFromStorage();
   }, [loadFromStorage]);
+
+  // Check if onboarding should be shown after data loads
+  useEffect(() => {
+    if (!isLoading && !userPreferences.hasCompletedOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [isLoading, userPreferences.hasCompletedOnboarding]);
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -169,6 +178,10 @@ export default function PlannerPage() {
       <ConflictDialog />
       <EditTaskDialog />
       <ClearAllDialog />
+      <OnboardingDialog
+        open={showOnboarding}
+        onOpenChange={setShowOnboarding}
+      />
 
       {/* Toast notifications */}
       <Toaster richColors position="top-right" />

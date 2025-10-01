@@ -77,6 +77,12 @@ export const DayConfigSchema = z
 // Global planner configuration schema (same structure as DayConfig for now)
 export const PlannerConfigSchema = DayConfigSchema;
 
+// User preferences schema
+export const UserPreferencesSchema = z.object({
+  name: z.string().max(100, 'Name too long').optional(),
+  hasCompletedOnboarding: z.boolean().default(false),
+});
+
 // Export data schemas
 export const DayExportSchema = z.object({
   dateKey: DateKeySchema,
@@ -87,6 +93,7 @@ export const PlannerExportSchema = z.object({
   exportedAt: z.string().datetime(),
   planner: PlannerConfigSchema,
   days: z.array(DayExportSchema),
+  userPreferences: UserPreferencesSchema.optional(),
 });
 
 // Share request/response schemas
@@ -94,6 +101,7 @@ export const ShareRequestSchema = z.object({
   dateKey: DateKeySchema,
   items: z.array(TaskSchema),
   planner: PlannerConfigSchema,
+  userName: z.string().optional(),
 });
 
 export const ShareResponseSchema = z.object({
@@ -120,6 +128,7 @@ export type DateKey = z.infer<typeof DateKeySchema>;
 export type Task = z.infer<typeof TaskSchema>;
 export type DayConfig = z.infer<typeof DayConfigSchema>;
 export type PlannerConfig = z.infer<typeof PlannerConfigSchema>;
+export type UserPreferences = z.infer<typeof UserPreferencesSchema>;
 export type DayExport = z.infer<typeof DayExportSchema>;
 export type PlannerExport = z.infer<typeof PlannerExportSchema>;
 export type ShareRequest = z.infer<typeof ShareRequestSchema>;
