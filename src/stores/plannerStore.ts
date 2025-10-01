@@ -824,6 +824,7 @@ export const usePlannerStore = create<PlannerState>()(
         schedules: state.schedules,
         globalConfig: state.globalConfig,
         dayConfigs: state.dayConfigs,
+        userPreferences: state.userPreferences,
         sharedLinks: state.sharedLinks,
       }),
     }
