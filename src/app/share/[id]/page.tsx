@@ -84,11 +84,15 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   const data = await kv.get<SharedDay>(`share:day:${id}`);
   if (!data) notFound();
 
+  console.log('Share page data:', data);
+
   const planner = data.planner ?? {
     startTime: '08:00',
     endTime: '23:30',
     interval: 30,
   };
+
+  console.log('Share page planner config:', planner);
 
   const rows = getDisplayRows(
     data.items ?? [],

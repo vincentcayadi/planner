@@ -122,12 +122,16 @@ export function TaskList() {
       const { userPreferences } = usePlannerStore.getState();
       const dayConfig = getDayConfig(currentDateKey);
 
+      console.log('Day config for sharing:', currentDateKey, dayConfig);
+
       const payload = {
         dateKey: currentDateKey,
         items,
         planner: dayConfig,
         userName: userPreferences.name,
       };
+
+      console.log('Share payload:', payload);
 
       const res = await fetch('/api/share', {
         method: 'POST',
