@@ -22,7 +22,6 @@ export default function PlannerPage() {
   const { currentDate, setCurrentDate, isLoading, loadFromStorage, userPreferences } = usePlannerStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
 
   // Load data from storage on mount
   useEffect(() => {
@@ -31,13 +30,19 @@ export default function PlannerPage() {
 
   // Check if onboarding should be shown after data loads
   useEffect(() => {
-    if (!isLoading && !hasCheckedOnboarding) {
-      setHasCheckedOnboarding(true);
-      if (!userPreferences.hasCompletedOnboarding) {
+    if (!isLoading) {
+      const sessionKey = 'onboarding-checked-this-session';
+      const hasCheckedThisSession = typeof window !== 'undefined' &&
+        sessionStorage.getItem(sessionKey) === 'true';
+
+      if (!hasCheckedThisSession && !userPreferences.hasCompletedOnboarding) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(sessionKey, 'true');
+        }
         setShowOnboarding(true);
       }
     }
-  }, [isLoading, hasCheckedOnboarding, userPreferences.hasCompletedOnboarding]);
+  }, [isLoading, userPreferences.hasCompletedOnboarding]);
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
