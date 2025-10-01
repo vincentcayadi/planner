@@ -22,6 +22,7 @@ Built with ❤️
 
 ### 👤 User Experience & Personalization
 - **User onboarding** - guided setup for first-time users with optional name collection
+- **Session-based persistence** - onboarding modal shows once per browser session until completed
 - **Personal preferences** - customizable default schedule settings (start/end time, interval)
 - **Smart skip functionality** - users can skip any onboarding step or entire flow
 - **Personalized sharing** - shared schedules display user name when provided
@@ -51,6 +52,8 @@ Built with ❤️
 ### 🌐 Sharing & Collaboration
 - **One-day share links** - publish read-only schedules with 24-hour expiry
 - **Personalized sharing** - shared schedules can display user name when provided
+- **Day-specific settings** - shared links respect custom time boundaries and intervals set for that day
+- **Consistent styling** - shared schedules match the main app's visual design and typography
 - **Secure sharing** via Upstash Redis with automatic cleanup
 - **Public view pages** with responsive design for mobile/desktop
 - **URL-based sharing** - easily send schedule links to others
@@ -133,6 +136,8 @@ Built with ❤️
 ### Sharing Features
 - **Create share link**: Click "Share Today" to generate a public URL
 - **Personalized schedules**: Shared links display your name when provided during onboarding
+- **Day-specific configuration**: Shared schedules respect custom time boundaries and intervals for that day
+- **Visual consistency**: Shared pages match the main app's typography and styling exactly
 - **24-hour expiry**: Shared schedules automatically expire after one day
 - **Read-only access**: Shared links show schedules without editing capabilities
 - **Mobile friendly**: Shared schedules work perfectly on mobile devices
@@ -184,6 +189,21 @@ src/
 - **Error boundaries**: Graceful error handling with fallback UI
 - **Security focused**: Input sanitization and validation throughout
 - **Performance optimized**: Efficient re-renders and state updates
+
+## 🔧 Recent Improvements
+
+### Bug Fixes & Enhancements
+- **Fixed onboarding persistence**: Modal no longer reappears on page refresh using sessionStorage
+- **Fixed share page configuration**: Shared schedules now respect custom day-specific time settings
+- **Enhanced visual consistency**: Share page styling matches main schedule view typography and spacing
+- **Improved user experience**: Onboarding flow with proper session management
+- **Code quality**: Fixed ESLint errors and improved JSX apostrophe handling
+
+### Technical Improvements
+- **Session-based modal management**: Prevents onboarding modal from showing repeatedly
+- **Day-specific config sharing**: Share API now sends correct time boundaries for custom days
+- **Responsive typography**: Consistent font scaling across main app and share pages
+- **Better error handling**: Improved validation and sanitization throughout the application
 
 ## 📄 License
 
